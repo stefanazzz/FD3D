@@ -1,0 +1,1185 @@
+! hELLO
+!cccccccccccccccccc
+!      medium size, number iterations; source position:
+       include 'parameters.f'
+!
+       real pi,peak,delta,vmax,mu_d,mu_s,dissipation
+       real deltah,deltamax
+       real rload,So,sn0,aa,hh,rr,rf,rn,rnn
+       real dx,dt,tw,ssini,vforce,InitRadius
+       real dist,dtx,tau2,dd,stremax,stremin,struncate
+       integer it,nos1,nos2,is1,is2
+       integer nxs,nys,nzs,nr
+       integer nbr,nxf1,nxf2,nyf1,nyf2,nzf,j0
+       integer lnuc,rcol,xc,yc,savefields,savetraces
+       logical spong,topography,input
+       character*4 FricType
+! field variables & parameters arrays:
+       real v1(1:nx,1:ny,1:nz)
+       real v2(1:nx,1:ny,1:nz)       
+       real v3(1:nx,1:ny,1:nz)       
+       real s11(1:nx,1:ny,1:nz)
+       real s22(1:nx,1:ny,1:nz)
+       real s33(1:nx,1:ny,1:nz)
+       real s12(1:nx,1:ny,1:nz)
+       real s23(1:nx,1:ny,1:nz)
+       real s13(1:nx,1:ny,1:nz)
+       real mu(1:nx,1:ny,1:nz)
+       real lam(1:nx,1:ny,1:nz)
+       real rho(1:nx,1:ny,1:nz)
+       real qf(1:nx,1:ny,1:nz)
+       real strini13 (1:nx,1:ny)
+       real strini23 (1:nx,1:ny)
+       real rstre (1:nx,1:ny)
+       real peak_tf (1:nx,1:ny)
+       real friction (1:nx,1:ny)
+       real rdis (1:nx,1:ny)
+       real rdis1 (1:nx,1:ny)
+       real rdis2 (1:nx,1:ny)
+       real theta (1:nx,1:ny)
+       real slip (1:nx,1:ny)
+       real slip_mem1(1:nx,1:ny)
+       real slip_mem2(1:nx,1:ny)
+       real dirac (1:nz)
+       integer nxr(1:maxnumsta),nyr(1:maxnumsta),nzr(1:maxnumsta)
+       integer broken (1:nx,1:ny)
+       integer incrack (1:nx,1:ny)
+! COMMON VAR&PAR:
+       common /real/ peak,delta,vmax,mu_d,mu_s,dx,dt,tw,dtx, &
+        pi,rload,So,sn0,aa,hh,rr,rf,rn,rnn,dissipation, &
+        deltah,deltamax, &
+        ssini,vforce,InitRadius,tau2,dd,stremax,stremin,struncate
+       common /ra1/ v1,v2,v3
+       common /ra2/ s11,s22,s33,s12,s23,s13,friction,rstre, &
+        peak_tf,slip_mem1,slip_mem2,slip,theta,rdis1, &
+        rdis2,rdis,dirac,strini13,strini23
+       common /ra3/ mu,lam,qf,rho
+       common /intvec/ broken,incrack,nxr,nyr,nzr
+       common /integer/ &
+        it,nos1,nos2,is1,is2,nbr,nxf1,nxf2,nyf1,nyf2,nzf,j0,&
+        lnuc,rcol,xc,yc,savefields,savetraces,nxs,nys,nzs, &
+        ntime,nr
+       common /logical/ spong,topography,input
+       common /chacha/  FricType
+ 
+       real DiTXS0(1:npm,1:ny,1:nz)
+       real DiBXS0(1:npm,1:ny,1:nz)
+       real DiTYS0(1:nx,1:npm,1:nz)
+       real DiBYS0(1:nx,1:npm,1:nz)
+       real DiTZS0(1:nx,1:ny,1:npm)
+       real DiBZS0(1:nx,1:ny,1:npm)
+       real DiTXS1(1:npm,1:ny,1:nz)
+       real DiBXS1(1:npm,1:ny,1:nz)
+       real DiTYS1(1:nx,1:npm,1:nz)
+       real DiBYS1(1:nx,1:npm,1:nz)
+       real DiTZS1(1:nx,1:ny,1:npm)
+       real DiBZS1(1:nx,1:ny,1:npm)
+
+       common /disDi0/ DiTXS0,DiBXS0,DiTYS0,DiBYS0,DiTZS0, DiBZS0
+       common /disDi1/ DiTXS1,DiBXS1,DiTYS1,DiBYS1,DiTZS1, DiBZS1
+
+       real v1TX(1:npm,1:ny,1:nz)
+       real v2TX(1:npm,1:ny,1:nz)
+       real v3TX(1:npm,1:ny,1:nz)
+       real s11TX(1:npm,1:ny,1:nz)
+       real s22TX(1:npm,1:ny,1:nz)
+       real s33TX(1:npm,1:ny,1:nz)
+       real s12TX(1:npm,1:ny,1:nz)
+       real s13TX(1:npm,1:ny,1:nz)
+       real s23TX(1:npm,1:ny,1:nz)
+       real lamTX(1:npm,1:ny,1:nz)
+       real muTX(1:npm,1:ny,1:nz)
+       real rhoTX(1:npm,1:ny,1:nz)
+!
+       real v1oTX(1:npm,1:ny,1:nz)
+       real v2oTX(1:npm,1:ny,1:nz)
+       real v3oTX(1:npm,1:ny,1:nz)
+       real s11oTX(1:npm,1:ny,1:nz)
+       real s22oTX(1:npm,1:ny,1:nz)
+       real s33oTX(1:npm,1:ny,1:nz)
+       real s12oTX(1:npm,1:ny,1:nz)
+       real s13oTX(1:npm,1:ny,1:nz)
+       real s23oTX(1:npm,1:ny,1:nz)
+       real v1pTX(1:npm,1:ny,1:nz)
+       real v2pTX(1:npm,1:ny,1:nz)
+       real v3pTX(1:npm,1:ny,1:nz)
+       real s11pTX(1:npm,1:ny,1:nz)
+       real s22pTX(1:npm,1:ny,1:nz)
+       real s33pTX(1:npm,1:ny,1:nz)
+       real s12pTX(1:npm,1:ny,1:nz)
+       real s13pTX(1:npm,1:ny,1:nz)
+       real s23pTX(1:npm,1:ny,1:nz)
+!
+      common/BlTX/v1TX,v2TX,v3TX,s11TX,s22TX,s33TX,s12TX,s13TX,s23TX,rhoTX,lamTX,muTX
+      common/BloTX/v1oTX,v2oTX,v3oTX,s11oTX,s22oTX,s33oTX,s12oTX,s13oTX,s23oTX
+      common/BlpTX/v1pTX,v2pTX,v3pTX,s11pTX,s22pTX,s33pTX,s12pTX,s13pTX,s23pTX
+      real v1TY(1:nx,1:npm,1:nz)
+      real v2TY(1:nx,1:npm,1:nz)
+      real v3TY(1:nx,1:npm,1:nz)
+      real s11TY(1:nx,1:npm,1:nz)
+      real s22TY(1:nx,1:npm,1:nz)
+      real s33TY(1:nx,1:npm,1:nz)
+      real s12TY(1:nx,1:npm,1:nz)
+      real s13TY(1:nx,1:npm,1:nz)
+      real s23TY(1:nx,1:npm,1:nz)
+      real lamTY(1:nx,1:npm,1:nz)
+      real muTY(1:nx,1:npm,1:nz)
+      real rhoTY(1:nx,1:npm,1:nz)
+      real v1oTY(1:nx,1:npm,1:nz)
+      real v2oTY(1:nx,1:npm,1:nz)
+      real v3oTY(1:nx,1:npm,1:nz)
+      real s11oTY(1:nx,1:npm,1:nz)
+      real s22oTY(1:nx,1:npm,1:nz)
+      real s33oTY(1:nx,1:npm,1:nz)
+      real s12oTY(1:nx,1:npm,1:nz)
+      real s13oTY(1:nx,1:npm,1:nz)
+      real s23oTY(1:nx,1:npm,1:nz)
+      real v1pTY(1:nx,1:npm,1:nz)
+      real v2pTY(1:nx,1:npm,1:nz)
+      real v3pTY(1:nx,1:npm,1:nz)
+      real s11pTY(1:nx,1:npm,1:nz)
+      real s22pTY(1:nx,1:npm,1:nz)
+      real s33pTY(1:nx,1:npm,1:nz)
+      real s12pTY(1:nx,1:npm,1:nz)
+      real s13pTY(1:nx,1:npm,1:nz)
+      real s23pTY(1:nx,1:npm,1:nz)
+
+      common/BlTY/v1TY,v2TY,v3TY,s11TY,s22TY,s33TY,s12TY,s13TY,s23TY,rhoTY,lamTY,muTY
+      common/BloTY/v1oTY,v2oTY,v3oTY,s11oTY,s22oTY,s33oTY,s12oTY,s13oTY,s23oTY
+      common/BlpTY/v1pTY,v2pTY,v3pTY,s11pTY,s22pTY,s33pTY,s12pTY,s13pTY,s23pTY
+
+      real v1TZ(1:nx,1:ny,1:npm)
+      real v2TZ(1:nx,1:ny,1:npm)
+      real v3TZ(1:nx,1:ny,1:npm)
+      real s11TZ(1:nx,1:ny,1:npm)
+      real s22TZ(1:nx,1:ny,1:npm)
+      real s33TZ(1:nx,1:ny,1:npm)
+      real s12TZ(1:nx,1:ny,1:npm)
+      real s13TZ(1:nx,1:ny,1:npm)
+      real s23TZ(1:nx,1:ny,1:npm)
+      real v1oTZ(1:nx,1:ny,1:npm)
+      real v2oTZ(1:nx,1:ny,1:npm)
+      real v3oTZ(1:nx,1:ny,1:npm)
+      real s11oTZ(1:nx,1:ny,1:npm)
+      real s22oTZ(1:nx,1:ny,1:npm)
+      real s33oTZ(1:nx,1:ny,1:npm)
+      real s12oTZ(1:nx,1:ny,1:npm)
+      real s13oTZ(1:nx,1:ny,1:npm)
+      real s23oTZ(1:nx,1:ny,1:npm)
+      real v1pTZ(1:nx,1:ny,1:npm)
+      real v2pTZ(1:nx,1:ny,1:npm)
+      real v3pTZ(1:nx,1:ny,1:npm)
+      real s11pTZ(1:nx,1:ny,1:npm)
+      real s22pTZ(1:nx,1:ny,1:npm)
+      real s33pTZ(1:nx,1:ny,1:npm)
+      real s12pTZ(1:nx,1:ny,1:npm)
+      real s13pTZ(1:nx,1:ny,1:npm)
+      real s23pTZ(1:nx,1:ny,1:npm)
+      real lamTZ(1:nx,1:ny,1:npm)
+      real muTZ(1:nx,1:ny,1:npm)
+      real rhoTZ(1:nx,1:ny,1:npm)
+
+      common/BlTZ/v1TZ,v2TZ,v3TZ,s11TZ,s22TZ,s33TZ,s12TZ,s13TZ,s23TZ,rhoTZ,lamTZ,muTZ
+      common/BloTZ/v1oTZ,v2oTZ,v3oTZ,s11oTZ,s22oTZ,s33oTZ,s12oTZ,s13oTZ,s23oTZ
+      common/BlpTZ/v1pTZ,v2pTZ,v3pTZ,s11pTZ,s22pTZ,s33pTZ,s12pTZ,s13pTZ,s23pTZ
+
+       real v1BX(1:npm,1:ny,1:nz)
+       real v2BX(1:npm,1:ny,1:nz)
+       real v3BX(1:npm,1:ny,1:nz)
+       real s11BX(1:npm,1:ny,1:nz)
+       real s22BX(1:npm,1:ny,1:nz)
+       real s33BX(1:npm,1:ny,1:nz)
+       real s12BX(1:npm,1:ny,1:nz)
+       real s13BX(1:npm,1:ny,1:nz)
+       real s23BX(1:npm,1:ny,1:nz)
+       real lamBX(1:npm,1:ny,1:nz)
+       real muBX(1:npm,1:ny,1:nz)
+       real rhoBX(1:npm,1:ny,1:nz)
+!
+       real v1oBX(1:npm,1:ny,1:nz)
+       real v2oBX(1:npm,1:ny,1:nz)
+       real v3oBX(1:npm,1:ny,1:nz)
+       real s11oBX(1:npm,1:ny,1:nz)
+       real s22oBX(1:npm,1:ny,1:nz)
+       real s33oBX(1:npm,1:ny,1:nz)
+       real s12oBX(1:npm,1:ny,1:nz)
+       real s13oBX(1:npm,1:ny,1:nz)
+       real s23oBX(1:npm,1:ny,1:nz)
+       real v1pBX(1:npm,1:ny,1:nz)
+       real v2pBX(1:npm,1:ny,1:nz)
+       real v3pBX(1:npm,1:ny,1:nz)
+       real s11pBX(1:npm,1:ny,1:nz)
+       real s22pBX(1:npm,1:ny,1:nz)
+       real s33pBX(1:npm,1:ny,1:nz)
+       real s12pBX(1:npm,1:ny,1:nz)
+       real s13pBX(1:npm,1:ny,1:nz)
+       real s23pBX(1:npm,1:ny,1:nz)
+!
+      common/BlBX/v1BX,v2BX,v3BX,s11BX,s22BX,s33BX,s12BX,s13BX,s23BX,rhoBX,lamBX,muBX
+      common/BloBX/v1oBX,v2oBX,v3oBX,s11oBX,s22oBX,s33oBX,s12oBX,s13oBX,s23oBX
+      common/BlpBX/v1pBX,v2pBX,v3pBX,s11pBX,s22pBX,s33pBX,s12pBX,s13pBX,s23pBX
+      real v1BY(1:nx,1:npm,1:nz)
+      real v2BY(1:nx,1:npm,1:nz)
+      real v3BY(1:nx,1:npm,1:nz)
+      real s11BY(1:nx,1:npm,1:nz)
+      real s22BY(1:nx,1:npm,1:nz)
+      real s33BY(1:nx,1:npm,1:nz)
+      real s12BY(1:nx,1:npm,1:nz)
+      real s13BY(1:nx,1:npm,1:nz)
+      real s23BY(1:nx,1:npm,1:nz)
+      real lamBY(1:nx,1:npm,1:nz)
+      real muBY(1:nx,1:npm,1:nz)
+      real rhoBY(1:nx,1:npm,1:nz)
+      real v1oBY(1:nx,1:npm,1:nz)
+      real v2oBY(1:nx,1:npm,1:nz)
+      real v3oBY(1:nx,1:npm,1:nz)
+      real s11oBY(1:nx,1:npm,1:nz)
+      real s22oBY(1:nx,1:npm,1:nz)
+      real s33oBY(1:nx,1:npm,1:nz)
+      real s12oBY(1:nx,1:npm,1:nz)
+      real s13oBY(1:nx,1:npm,1:nz)
+      real s23oBY(1:nx,1:npm,1:nz)
+      real v1pBY(1:nx,1:npm,1:nz)
+      real v2pBY(1:nx,1:npm,1:nz)
+      real v3pBY(1:nx,1:npm,1:nz)
+      real s11pBY(1:nx,1:npm,1:nz)
+      real s22pBY(1:nx,1:npm,1:nz)
+      real s33pBY(1:nx,1:npm,1:nz)
+      real s12pBY(1:nx,1:npm,1:nz)
+      real s13pBY(1:nx,1:npm,1:nz)
+      real s23pBY(1:nx,1:npm,1:nz)
+
+      common/BlBY/v1BY,v2BY,v3BY,s11BY,s22BY,s33BY,s12BY,s13BY,s23BY,rhoBY,lamBY,muBY
+      common/BloBY/v1oBY,v2oBY,v3oBY,s11oBY,s22oBY,s33oBY,s12oBY,s13oBY,s23oBY
+      common/BlpBY/v1pBY,v2pBY,v3pBY,s11pBY,s22pBY,s33pBY,s12pBY,s13pBY,s23pBY
+
+      real v1BZ(1:nx,1:ny,1:npm)
+      real v2BZ(1:nx,1:ny,1:npm)
+      real v3BZ(1:nx,1:ny,1:npm)
+      real s11BZ(1:nx,1:ny,1:npm)
+      real s22BZ(1:nx,1:ny,1:npm)
+      real s33BZ(1:nx,1:ny,1:npm)
+      real s12BZ(1:nx,1:ny,1:npm)
+      real s13BZ(1:nx,1:ny,1:npm)
+      real s23BZ(1:nx,1:ny,1:npm)
+      real v1oBZ(1:nx,1:ny,1:npm)
+      real v2oBZ(1:nx,1:ny,1:npm)
+      real v3oBZ(1:nx,1:ny,1:npm)
+      real s11oBZ(1:nx,1:ny,1:npm)
+      real s22oBZ(1:nx,1:ny,1:npm)
+      real s33oBZ(1:nx,1:ny,1:npm)
+      real s12oBZ(1:nx,1:ny,1:npm)
+      real s13oBZ(1:nx,1:ny,1:npm)
+      real s23oBZ(1:nx,1:ny,1:npm)
+      real v1pBZ(1:nx,1:ny,1:npm)
+      real v2pBZ(1:nx,1:ny,1:npm)
+      real v3pBZ(1:nx,1:ny,1:npm)
+      real s11pBZ(1:nx,1:ny,1:npm)
+      real s22pBZ(1:nx,1:ny,1:npm)
+      real s33pBZ(1:nx,1:ny,1:npm)
+      real s12pBZ(1:nx,1:ny,1:npm)
+      real s13pBZ(1:nx,1:ny,1:npm)
+      real s23pBZ(1:nx,1:ny,1:npm)
+      real lamBZ(1:nx,1:ny,1:npm)
+      real muBZ(1:nx,1:ny,1:npm)
+      real rhoBZ(1:nx,1:ny,1:npm)
+
+      common/BlBZ/v1BZ,v2BZ,v3BZ,s11BZ,s22BZ,s33BZ,s12BZ,s13BZ,s23BZ,rhoBZ,lamBZ,muBZ
+      common/BloBZ/v1oBZ,v2oBZ,v3oBZ,s11oBZ,s22oBZ,s33oBZ,s12oBZ,s13oBZ,s23oBZ
+      common/BlpBZ/v1pBZ,v2pBZ,v3pBZ,s11pBZ,s22pBZ,s33pBZ,s12pBZ,s13pBZ,s23pBZ
+
+      real v1TXTY(1:npm,1:npm,1:nz)
+      real v2TXTY(1:npm,1:npm,1:nz)
+      real v3TXTY(1:npm,1:npm,1:nz)
+      real s11TXTY(1:npm,1:npm,1:nz)
+      real s22TXTY(1:npm,1:npm,1:nz)
+      real s33TXTY(1:npm,1:npm,1:nz)
+      real s12TXTY(1:npm,1:npm,1:nz)
+      real s13TXTY(1:npm,1:npm,1:nz)
+      real s23TXTY(1:npm,1:npm,1:nz)
+      real v1xTXTY(1:npm,1:npm,1:nz)
+      real v2xTXTY(1:npm,1:npm,1:nz)
+      real v3xTXTY(1:npm,1:npm,1:nz)
+      real s11xTXTY(1:npm,1:npm,1:nz)
+      real s22xTXTY(1:npm,1:npm,1:nz)
+      real s33xTXTY(1:npm,1:npm,1:nz)
+      real s12xTXTY(1:npm,1:npm,1:nz)
+      real s13xTXTY(1:npm,1:npm,1:nz)
+      real v1yTXTY(1:npm,1:npm,1:nz)
+      real v2yTXTY(1:npm,1:npm,1:nz)
+      real v3yTXTY(1:npm,1:npm,1:nz)
+      real s11yTXTY(1:npm,1:npm,1:nz)
+      real s22yTXTY(1:npm,1:npm,1:nz)
+      real s33yTXTY(1:npm,1:npm,1:nz)
+      real s12yTXTY(1:npm,1:npm,1:nz)
+      real s23yTXTY(1:npm,1:npm,1:nz)
+      real v1zTXTY(1:npm,1:npm,1:nz)
+      real v2zTXTY(1:npm,1:npm,1:nz)
+      real v3zTXTY(1:npm,1:npm,1:nz)
+      real s11zTXTY(1:npm,1:npm,1:nz)
+      real s22zTXTY(1:npm,1:npm,1:nz)
+      real s33zTXTY(1:npm,1:npm,1:nz)
+      real s13zTXTY(1:npm,1:npm,1:nz)
+      real s23zTXTY(1:npm,1:npm,1:nz)
+      real lamTXTY(1:npm,1:npm,1:nz)
+      real muTXTY(1:npm,1:npm,1:nz)
+      real rhoTXTY(1:npm,1:npm,1:nz)
+      common/BlTXTY/v1TXTY,v2TXTY,v3TXTY,s11TXTY,s22TXTY,s33TXTY,s12TXTY,s13TXTY,   &
+       s23TXTY,rhoTXTY,lamTXTY,muTXTY
+      common/BlxTXTY/v1xTXTY,v2xTXTY,v3xTXTY,s11xTXTY,s22xTXTY,s33xTXTY,s12xTXTY,s13xTXTY
+       
+      common/BlyTXTY/v1yTXTY,v2yTXTY,v3yTXTY,s11yTXTY,s22yTXTY,s33yTXTY,s12yTXTY,   &
+       s23yTXTY
+      common/BlzTXTY/v1zTXTY,v2zTXTY,v3zTXTY,s11zTXTY,s22zTXTY,s33zTXTY,s13zTXTY,  &
+       s23zTXTY
+
+      real v1TXBY(1:npm,1:npm,1:nz)
+      real v2TXBY(1:npm,1:npm,1:nz)
+      real v3TXBY(1:npm,1:npm,1:nz)
+      real s11TXBY(1:npm,1:npm,1:nz)
+      real s22TXBY(1:npm,1:npm,1:nz)
+      real s33TXBY(1:npm,1:npm,1:nz)
+      real s12TXBY(1:npm,1:npm,1:nz)
+      real s13TXBY(1:npm,1:npm,1:nz)
+      real s23TXBY(1:npm,1:npm,1:nz)
+      real v1xTXBY(1:npm,1:npm,1:nz)
+      real v2xTXBY(1:npm,1:npm,1:nz)
+      real v3xTXBY(1:npm,1:npm,1:nz)
+      real s11xTXBY(1:npm,1:npm,1:nz)
+      real s22xTXBY(1:npm,1:npm,1:nz)
+      real s33xTXBY(1:npm,1:npm,1:nz)
+      real s12xTXBY(1:npm,1:npm,1:nz)
+      real s13xTXBY(1:npm,1:npm,1:nz)
+      real v1yTXBY(1:npm,1:npm,1:nz)
+      real v2yTXBY(1:npm,1:npm,1:nz)
+      real v3yTXBY(1:npm,1:npm,1:nz)
+      real s11yTXBY(1:npm,1:npm,1:nz)
+      real s22yTXBY(1:npm,1:npm,1:nz)
+      real s33yTXBY(1:npm,1:npm,1:nz)
+      real s12yTXBY(1:npm,1:npm,1:nz)
+      real s23yTXBY(1:npm,1:npm,1:nz)
+      real v1zTXBY(1:npm,1:npm,1:nz)
+      real v2zTXBY(1:npm,1:npm,1:nz)
+      real v3zTXBY(1:npm,1:npm,1:nz)
+      real s11zTXBY(1:npm,1:npm,1:nz)
+      real s22zTXBY(1:npm,1:npm,1:nz)
+      real s33zTXBY(1:npm,1:npm,1:nz)
+      real s13zTXBY(1:npm,1:npm,1:nz)
+      real s23zTXBY(1:npm,1:npm,1:nz)
+      real lamTXBY(1:npm,1:npm,1:nz)
+      real muTXBY(1:npm,1:npm,1:nz)
+      real rhoTXBY(1:npm,1:npm,1:nz)
+      common/BlTXBY/v1TXBY,v2TXBY,v3TXBY,s11TXBY,s22TXBY,s33TXBY,s12TXBY,s13TXBY,   &
+       s23TXBY,rhoTXBY,lamTXBY,muTXBY
+      common/BlxTXBY/v1xTXBY,v2xTXBY,v3xTXBY,s11xTXBY,s22xTXBY,s33xTXBY,s12xTXBY,s13xTXBY
+       
+      common/BlyTXBY/v1yTXBY,v2yTXBY,v3yTXBY,s11yTXBY,s22yTXBY,s33yTXBY,s12yTXBY,   &
+       s23yTXBY
+      common/BlzTXBY/v1zTXBY,v2zTXBY,v3zTXBY,s11zTXBY,s22zTXBY,s33zTXBY,s13zTXBY,  &
+       s23zTXBY
+
+      real v1BXTY(1:npm,1:npm,1:nz)
+      real v2BXTY(1:npm,1:npm,1:nz)
+      real v3BXTY(1:npm,1:npm,1:nz)
+      real s11BXTY(1:npm,1:npm,1:nz)
+      real s22BXTY(1:npm,1:npm,1:nz)
+      real s33BXTY(1:npm,1:npm,1:nz)
+      real s12BXTY(1:npm,1:npm,1:nz)
+      real s13BXTY(1:npm,1:npm,1:nz)
+      real s23BXTY(1:npm,1:npm,1:nz)
+      real v1xBXTY(1:npm,1:npm,1:nz)
+      real v2xBXTY(1:npm,1:npm,1:nz)
+      real v3xBXTY(1:npm,1:npm,1:nz)
+      real s11xBXTY(1:npm,1:npm,1:nz)
+      real s22xBXTY(1:npm,1:npm,1:nz)
+      real s33xBXTY(1:npm,1:npm,1:nz)
+      real s12xBXTY(1:npm,1:npm,1:nz)
+      real s13xBXTY(1:npm,1:npm,1:nz)
+      real v1yBXTY(1:npm,1:npm,1:nz)
+      real v2yBXTY(1:npm,1:npm,1:nz)
+      real v3yBXTY(1:npm,1:npm,1:nz)
+      real s11yBXTY(1:npm,1:npm,1:nz)
+      real s22yBXTY(1:npm,1:npm,1:nz)
+      real s33yBXTY(1:npm,1:npm,1:nz)
+      real s12yBXTY(1:npm,1:npm,1:nz)
+      real s23yBXTY(1:npm,1:npm,1:nz)
+      real v1zBXTY(1:npm,1:npm,1:nz)
+      real v2zBXTY(1:npm,1:npm,1:nz)
+      real v3zBXTY(1:npm,1:npm,1:nz)
+      real s11zBXTY(1:npm,1:npm,1:nz)
+      real s22zBXTY(1:npm,1:npm,1:nz)
+      real s33zBXTY(1:npm,1:npm,1:nz)
+      real s13zBXTY(1:npm,1:npm,1:nz)
+      real s23zBXTY(1:npm,1:npm,1:nz)
+      real lamBXTY(1:npm,1:npm,1:nz)
+      real muBXTY(1:npm,1:npm,1:nz)
+      real rhoBXTY(1:npm,1:npm,1:nz)
+      common/BlBXTY/v1BXTY,v2BXTY,v3BXTY,s11BXTY,s22BXTY,s33BXTY,s12BXTY,s13BXTY,   &
+       s23BXTY,rhoBXTY,lamBXTY,muBXTY
+      common/BlxBXTY/v1xBXTY,v2xBXTY,v3xBXTY,s11xBXTY,s22xBXTY,s33xBXTY,s12xBXTY,s13xBXTY
+       
+      common/BlyBXTY/v1yBXTY,v2yBXTY,v3yBXTY,s11yBXTY,s22yBXTY,s33yBXTY,s12yBXTY,   &
+       s23yBXTY
+      common/BlzBXTY/v1zBXTY,v2zBXTY,v3zBXTY,s11zBXTY,s22zBXTY,s33zBXTY,s13zBXTY,  &
+       s23zBXTY
+
+      real v1BXBY(1:npm,1:npm,1:nz)
+      real v2BXBY(1:npm,1:npm,1:nz)
+      real v3BXBY(1:npm,1:npm,1:nz)
+      real s11BXBY(1:npm,1:npm,1:nz)
+      real s22BXBY(1:npm,1:npm,1:nz)
+      real s33BXBY(1:npm,1:npm,1:nz)
+      real s12BXBY(1:npm,1:npm,1:nz)
+      real s13BXBY(1:npm,1:npm,1:nz)
+      real s23BXBY(1:npm,1:npm,1:nz)
+      real v1xBXBY(1:npm,1:npm,1:nz)
+      real v2xBXBY(1:npm,1:npm,1:nz)
+      real v3xBXBY(1:npm,1:npm,1:nz)
+      real s11xBXBY(1:npm,1:npm,1:nz)
+      real s22xBXBY(1:npm,1:npm,1:nz)
+      real s33xBXBY(1:npm,1:npm,1:nz)
+      real s12xBXBY(1:npm,1:npm,1:nz)
+      real s13xBXBY(1:npm,1:npm,1:nz)
+      real v1yBXBY(1:npm,1:npm,1:nz)
+      real v2yBXBY(1:npm,1:npm,1:nz)
+      real v3yBXBY(1:npm,1:npm,1:nz)
+      real s11yBXBY(1:npm,1:npm,1:nz)
+      real s22yBXBY(1:npm,1:npm,1:nz)
+      real s33yBXBY(1:npm,1:npm,1:nz)
+      real s12yBXBY(1:npm,1:npm,1:nz)
+      real s23yBXBY(1:npm,1:npm,1:nz)
+      real v1zBXBY(1:npm,1:npm,1:nz)
+      real v2zBXBY(1:npm,1:npm,1:nz)
+      real v3zBXBY(1:npm,1:npm,1:nz)
+      real s11zBXBY(1:npm,1:npm,1:nz)
+      real s22zBXBY(1:npm,1:npm,1:nz)
+      real s33zBXBY(1:npm,1:npm,1:nz)
+      real s13zBXBY(1:npm,1:npm,1:nz)
+      real s23zBXBY(1:npm,1:npm,1:nz)
+      real lamBXBY(1:npm,1:npm,1:nz)
+      real muBXBY(1:npm,1:npm,1:nz)
+      real rhoBXBY(1:npm,1:npm,1:nz)
+      common/BlBXBY/v1BXBY,v2BXBY,v3BXBY,s11BXBY,s22BXBY,s33BXBY,s12BXBY,s13BXBY,   &
+       s23BXBY,rhoBXBY,lamBXBY,muBXBY
+      common/BlxBXBY/v1xBXBY,v2xBXBY,v3xBXBY,s11xBXBY,s22xBXBY,s33xBXBY,s12xBXBY,s13xBXBY
+      
+      common/BlyBXBY/v1yBXBY,v2yBXBY,v3yBXBY,s11yBXBY,s22yBXBY,s33yBXBY,s12yBXBY,   &
+       s23yBXBY
+      common/BlzBXBY/v1zBXBY,v2zBXBY,v3zBXBY,s11zBXBY,s22zBXBY,s33zBXBY,s13zBXBY,  &
+       s23zBXBY
+
+      real v1TXTZ(1:npm,1:ny,1:npm)
+      real v2TXTZ(1:npm,1:ny,1:npm)
+      real v3TXTZ(1:npm,1:ny,1:npm)
+      real s11TXTZ(1:npm,1:ny,1:npm)
+      real s22TXTZ(1:npm,1:ny,1:npm)
+      real s33TXTZ(1:npm,1:ny,1:npm)
+      real s12TXTZ(1:npm,1:ny,1:npm)
+      real s13TXTZ(1:npm,1:ny,1:npm)
+      real s23TXTZ(1:npm,1:ny,1:npm)
+      real lamTXTZ(1:npm,1:ny,1:npm)
+      real muTXTZ(1:npm,1:ny,1:npm)
+      real rhoTXTZ(1:npm,1:ny,1:npm)
+      real v1xTXTZ(1:npm,1:ny,1:npm)
+      real v2xTXTZ(1:npm,1:ny,1:npm)
+      real v3xTXTZ(1:npm,1:ny,1:npm)
+      real s11xTXTZ(1:npm,1:ny,1:npm)
+      real s22xTXTZ(1:npm,1:ny,1:npm)
+      real s33xTXTZ(1:npm,1:ny,1:npm)
+      real s12xTXTZ(1:npm,1:ny,1:npm)
+      real s13xTXTZ(1:npm,1:ny,1:npm)
+      real v1yTXTZ(1:npm,1:ny,1:npm)
+      real v2yTXTZ(1:npm,1:ny,1:npm)
+      real v3yTXTZ(1:npm,1:ny,1:npm)
+      real s11yTXTZ(1:npm,1:ny,1:npm)
+      real s22yTXTZ(1:npm,1:ny,1:npm)
+      real s33yTXTZ(1:npm,1:ny,1:npm)
+      real s12yTXTZ(1:npm,1:ny,1:npm)
+      real s23yTXTZ(1:npm,1:ny,1:npm)
+      real v1zTXTZ(1:npm,1:ny,1:npm)
+      real v2zTXTZ(1:npm,1:ny,1:npm)
+      real v3zTXTZ(1:npm,1:ny,1:npm)
+      real s11zTXTZ(1:npm,1:ny,1:npm)
+      real s22zTXTZ(1:npm,1:ny,1:npm)
+      real s33zTXTZ(1:npm,1:ny,1:npm)
+      real s13zTXTZ(1:npm,1:ny,1:npm)
+      real s23zTXTZ(1:npm,1:ny,1:npm)
+      common/BlTXTZ/v1TXTZ,v2TXTZ,v3TXTZ,s11TXTZ,s22TXTZ,s33TXTZ,s12TXTZ,s13TXTZ,     &
+      s23TXTZ,rhoTXTZ,lamTXTZ,muTXTZ
+      common/BlxTXTZ/v1xTXTZ,v2xTXTZ,v3xTXTZ,s11xTXTZ,s22xTXTZ,s33xTXTZ,s12xTXTZ,s13xTXTZ
+      
+      common/BlyTXTZ/v1yTXTZ,v2yTXTZ,v3yTXTZ,s11yTXTZ,s22yTXTZ,s33yTXTZ,s12yTXTZ, &
+      s23yTXTZ 
+      common/BlzTXTZ/v1zTXTZ,v2zTXTZ,v3zTXTZ,s11zTXTZ,s22zTXTZ,s33zTXTZ,s13zTXTZ, &
+      s23zTXTZ
+
+      real v1TXBZ(1:npm,1:ny,1:npm)
+      real v2TXBZ(1:npm,1:ny,1:npm)
+      real v3TXBZ(1:npm,1:ny,1:npm)
+      real s11TXBZ(1:npm,1:ny,1:npm)
+      real s22TXBZ(1:npm,1:ny,1:npm)
+      real s33TXBZ(1:npm,1:ny,1:npm)
+      real s12TXBZ(1:npm,1:ny,1:npm)
+      real s13TXBZ(1:npm,1:ny,1:npm)
+      real s23TXBZ(1:npm,1:ny,1:npm)
+      real lamTXBZ(1:npm,1:ny,1:npm)
+      real muTXBZ(1:npm,1:ny,1:npm)
+      real rhoTXBZ(1:npm,1:ny,1:npm)
+      real v1xTXBZ(1:npm,1:ny,1:npm)
+      real v2xTXBZ(1:npm,1:ny,1:npm)
+      real v3xTXBZ(1:npm,1:ny,1:npm)
+      real s11xTXBZ(1:npm,1:ny,1:npm)
+      real s22xTXBZ(1:npm,1:ny,1:npm)
+      real s33xTXBZ(1:npm,1:ny,1:npm)
+      real s12xTXBZ(1:npm,1:ny,1:npm)
+      real s13xTXBZ(1:npm,1:ny,1:npm)
+      real v1yTXBZ(1:npm,1:ny,1:npm)
+      real v2yTXBZ(1:npm,1:ny,1:npm)
+      real v3yTXBZ(1:npm,1:ny,1:npm)
+      real s11yTXBZ(1:npm,1:ny,1:npm)
+      real s22yTXBZ(1:npm,1:ny,1:npm)
+      real s33yTXBZ(1:npm,1:ny,1:npm)
+      real s12yTXBZ(1:npm,1:ny,1:npm)
+      real s23yTXBZ(1:npm,1:ny,1:npm)
+      real v1zTXBZ(1:npm,1:ny,1:npm)
+      real v2zTXBZ(1:npm,1:ny,1:npm)
+      real v3zTXBZ(1:npm,1:ny,1:npm)
+      real s11zTXBZ(1:npm,1:ny,1:npm)
+      real s22zTXBZ(1:npm,1:ny,1:npm)
+      real s33zTXBZ(1:npm,1:ny,1:npm)
+      real s13zTXBZ(1:npm,1:ny,1:npm)
+      real s23zTXBZ(1:npm,1:ny,1:npm)
+      common/OreBlTXBZ/v1TXBZ,v2TXBZ,v3TXBZ,s11TXBZ,s22TXBZ,s33TXBZ, &
+      s12TXBZ,s13TXBZ,     &
+      s23TXBZ,rhoTXBZ,lamTXBZ,muTXBZ
+      common/OreBlxTXBZ/v1xTXBZ,v2xTXBZ,v3xTXBZ,s11xTXBZ,s22xTXBZ, &
+      s33xTXBZ,s12xTXBZ,s13xTXBZ
+      
+      common/OreBlyTXBZ/v1yTXBZ,v2yTXBZ,v3yTXBZ,s11yTXBZ,s22yTXBZ, &
+      s33yTXBZ,s12yTXBZ, &
+      s23yTXBZ 
+      common/OreBlzTXBZ/v1zTXBZ,v2zTXBZ,v3zTXBZ, &
+      s11zTXBZ,s22zTXBZ,s33zTXBZ,s13zTXBZ, &
+      s23zTXBZ
+      real v1BXTZ(1:npm,1:ny,1:npm)
+      real v2BXTZ(1:npm,1:ny,1:npm)
+      real v3BXTZ(1:npm,1:ny,1:npm)
+      real s11BXTZ(1:npm,1:ny,1:npm)
+      real s22BXTZ(1:npm,1:ny,1:npm)
+      real s33BXTZ(1:npm,1:ny,1:npm)
+      real s12BXTZ(1:npm,1:ny,1:npm)
+      real s13BXTZ(1:npm,1:ny,1:npm)
+      real s23BXTZ(1:npm,1:ny,1:npm)
+      real lamBXTZ(1:npm,1:ny,1:npm)
+      real muBXTZ(1:npm,1:ny,1:npm)
+      real rhoBXTZ(1:npm,1:ny,1:npm)
+      real v1xBXTZ(1:npm,1:ny,1:npm)
+      real v2xBXTZ(1:npm,1:ny,1:npm)
+      real v3xBXTZ(1:npm,1:ny,1:npm)
+      real s11xBXTZ(1:npm,1:ny,1:npm)
+      real s22xBXTZ(1:npm,1:ny,1:npm)
+      real s33xBXTZ(1:npm,1:ny,1:npm)
+      real s12xBXTZ(1:npm,1:ny,1:npm)
+      real s13xBXTZ(1:npm,1:ny,1:npm)
+      real v1yBXTZ(1:npm,1:ny,1:npm)
+      real v2yBXTZ(1:npm,1:ny,1:npm)
+      real v3yBXTZ(1:npm,1:ny,1:npm)
+      real s11yBXTZ(1:npm,1:ny,1:npm)
+      real s22yBXTZ(1:npm,1:ny,1:npm)
+      real s33yBXTZ(1:npm,1:ny,1:npm)
+      real s12yBXTZ(1:npm,1:ny,1:npm)
+      real s23yBXTZ(1:npm,1:ny,1:npm)
+      real v1zBXTZ(1:npm,1:ny,1:npm)
+      real v2zBXTZ(1:npm,1:ny,1:npm)
+      real v3zBXTZ(1:npm,1:ny,1:npm)
+      real s11zBXTZ(1:npm,1:ny,1:npm)
+      real s22zBXTZ(1:npm,1:ny,1:npm)
+      real s33zBXTZ(1:npm,1:ny,1:npm)
+      real s13zBXTZ(1:npm,1:ny,1:npm)
+      real s23zBXTZ(1:npm,1:ny,1:npm)
+      common/BlBXTZ/v1BXTZ,v2BXTZ,v3BXTZ,s11BXTZ,s22BXTZ,s33BXTZ,s12BXTZ,s13BXTZ,     &
+      s23BXTZ,rhoBXTZ,lamBXTZ,muBXTZ
+      common/BlxBXTZ/v1xBXTZ,v2xBXTZ,v3xBXTZ,s11xBXTZ,s22xBXTZ,s33xBXTZ,s12xBXTZ,s13xBXTZ
+      
+      common/BlyBXTZ/v1yBXTZ,v2yBXTZ,v3yBXTZ,s11yBXTZ,s22yBXTZ,s33yBXTZ,s12yBXTZ, &
+      s23yBXTZ 
+      common/BlzBXTZ/v1zBXTZ,v2zBXTZ,v3zBXTZ,s11zBXTZ,s22zBXTZ,s33zBXTZ,s13zBXTZ, &
+      s23zBXTZ
+      real v1BXBZ(1:npm,1:ny,1:npm)
+      real v2BXBZ(1:npm,1:ny,1:npm)
+      real v3BXBZ(1:npm,1:ny,1:npm)
+      real s11BXBZ(1:npm,1:ny,1:npm)
+      real s22BXBZ(1:npm,1:ny,1:npm)
+      real s33BXBZ(1:npm,1:ny,1:npm)
+      real s12BXBZ(1:npm,1:ny,1:npm)
+      real s13BXBZ(1:npm,1:ny,1:npm)
+      real s23BXBZ(1:npm,1:ny,1:npm)
+      real lamBXBZ(1:npm,1:ny,1:npm)
+      real muBXBZ(1:npm,1:ny,1:npm)
+      real rhoBXBZ(1:npm,1:ny,1:npm)
+      real v1xBXBZ(1:npm,1:ny,1:npm)
+      real v2xBXBZ(1:npm,1:ny,1:npm)
+      real v3xBXBZ(1:npm,1:ny,1:npm)
+      real s11xBXBZ(1:npm,1:ny,1:npm)
+      real s22xBXBZ(1:npm,1:ny,1:npm)
+      real s33xBXBZ(1:npm,1:ny,1:npm)
+      real s12xBXBZ(1:npm,1:ny,1:npm)
+      real s13xBXBZ(1:npm,1:ny,1:npm)
+      real v1yBXBZ(1:npm,1:ny,1:npm)
+      real v2yBXBZ(1:npm,1:ny,1:npm)
+      real v3yBXBZ(1:npm,1:ny,1:npm)
+      real s11yBXBZ(1:npm,1:ny,1:npm)
+      real s22yBXBZ(1:npm,1:ny,1:npm)
+      real s33yBXBZ(1:npm,1:ny,1:npm)
+      real s12yBXBZ(1:npm,1:ny,1:npm)
+      real s23yBXBZ(1:npm,1:ny,1:npm)
+      real v1zBXBZ(1:npm,1:ny,1:npm)
+      real v2zBXBZ(1:npm,1:ny,1:npm)
+      real v3zBXBZ(1:npm,1:ny,1:npm)
+      real s11zBXBZ(1:npm,1:ny,1:npm)
+      real s22zBXBZ(1:npm,1:ny,1:npm)
+      real s33zBXBZ(1:npm,1:ny,1:npm)
+      real s13zBXBZ(1:npm,1:ny,1:npm)
+      real s23zBXBZ(1:npm,1:ny,1:npm)
+      common/BlBXBZ/v1BXBZ,v2BXBZ,v3BXBZ,s11BXBZ,s22BXBZ,s33BXBZ,s12BXBZ,s13BXBZ,     &
+      s23BXBZ,rhoBXBZ,lamBXBZ,muBXBZ
+      common/BlxBXBZ/v1xBXBZ,v2xBXBZ,v3xBXBZ,s11xBXBZ,s22xBXBZ,s33xBXBZ,s12xBXBZ,s13xBXBZ
+      
+      common/BlyBXBZ/v1yBXBZ,v2yBXBZ,v3yBXBZ,s11yBXBZ,s22yBXBZ,s33yBXBZ,s12yBXBZ, &
+      s23yBXBZ 
+      common/BlzBXBZ/v1zBXBZ,v2zBXBZ,v3zBXBZ,s11zBXBZ,s22zBXBZ,s33zBXBZ,s13zBXBZ, &
+      s23zBXBZ
+
+      real v1TYTZ(1:nx,1:npm,1:npm)
+      real v2TYTZ(1:nx,1:npm,1:npm)
+      real v3TYTZ(1:nx,1:npm,1:npm)
+      real s11TYTZ(1:nx,1:npm,1:npm)
+      real s22TYTZ(1:nx,1:npm,1:npm)
+      real s33TYTZ(1:nx,1:npm,1:npm)
+      real s12TYTZ(1:nx,1:npm,1:npm)
+      real s13TYTZ(1:nx,1:npm,1:npm)
+      real s23TYTZ(1:nx,1:npm,1:npm)
+      real lamTYTZ(1:nx,1:npm,1:npm)
+      real muTYTZ(1:nx,1:npm,1:npm)
+      real rhoTYTZ(1:nx,1:npm,1:npm)
+      real v1xTYTZ(1:nx,1:npm,1:npm)
+      real v2xTYTZ(1:nx,1:npm,1:npm)
+      real v3xTYTZ(1:nx,1:npm,1:npm)
+      real s11xTYTZ(1:nx,1:npm,1:npm)
+      real s22xTYTZ(1:nx,1:npm,1:npm)
+      real s33xTYTZ(1:nx,1:npm,1:npm)
+      real s12xTYTZ(1:nx,1:npm,1:npm)
+      real s13xTYTZ(1:nx,1:npm,1:npm)
+      real v1yTYTZ(1:nx,1:npm,1:npm)
+      real v2yTYTZ(1:nx,1:npm,1:npm)
+      real v3yTYTZ(1:nx,1:npm,1:npm)
+      real s11yTYTZ(1:nx,1:npm,1:npm)
+      real s22yTYTZ(1:nx,1:npm,1:npm)
+      real s33yTYTZ(1:nx,1:npm,1:npm)
+      real s12yTYTZ(1:nx,1:npm,1:npm)
+      real s23yTYTZ(1:nx,1:npm,1:npm)
+      real v1zTYTZ(1:nx,1:npm,1:npm)
+      real v2zTYTZ(1:nx,1:npm,1:npm)
+      real v3zTYTZ(1:nx,1:npm,1:npm)
+      real s11zTYTZ(1:nx,1:npm,1:npm)
+      real s22zTYTZ(1:nx,1:npm,1:npm)
+      real s33zTYTZ(1:nx,1:npm,1:npm)
+      real s13zTYTZ(1:nx,1:npm,1:npm)
+      real s23zTYTZ(1:nx,1:npm,1:npm)
+      common/BlTYTZ/v1TYTZ,v2TYTZ,v3TYTZ,s11TYTZ,s22TYTZ,s33TYTZ,s12TYTZ,s13TYTZ,     &
+      s23TYTZ,rhoTYTZ,lamTYTZ,muTYTZ
+      common/BlxTYTZ/v1xTYTZ,v2xTYTZ,v3xTYTZ,s11xTYTZ,s22xTYTZ,s33xTYTZ, &
+      s12xTYTZ,s13xTYTZ
+      common/BlyTYTZ/v1yTYTZ,v2yTYTZ,v3yTYTZ,s11yTYTZ,s22yTYTZ,s33yTYTZ,s12yTYTZ,  &
+      s23yTYTZ
+      common/BlzTYTZ/v1zTYTZ,v2zTYTZ,v3zTYTZ,s11zTYTZ,s22zTYTZ,s33zTYTZ,s13zTYTZ, &
+      s23zTYTZ
+
+      real v1TYBZ(1:nx,1:npm,1:npm)
+      real v2TYBZ(1:nx,1:npm,1:npm)
+      real v3TYBZ(1:nx,1:npm,1:npm)
+      real s11TYBZ(1:nx,1:npm,1:npm)
+      real s22TYBZ(1:nx,1:npm,1:npm)
+      real s33TYBZ(1:nx,1:npm,1:npm)
+      real s12TYBZ(1:nx,1:npm,1:npm)
+      real s13TYBZ(1:nx,1:npm,1:npm)
+      real s23TYBZ(1:nx,1:npm,1:npm)
+      real lamTYBZ(1:nx,1:npm,1:npm)
+      real muTYBZ(1:nx,1:npm,1:npm)
+      real rhoTYBZ(1:nx,1:npm,1:npm)
+      real v1xTYBZ(1:nx,1:npm,1:npm)
+      real v2xTYBZ(1:nx,1:npm,1:npm)
+      real v3xTYBZ(1:nx,1:npm,1:npm)
+      real s11xTYBZ(1:nx,1:npm,1:npm)
+      real s22xTYBZ(1:nx,1:npm,1:npm)
+      real s33xTYBZ(1:nx,1:npm,1:npm)
+      real s12xTYBZ(1:nx,1:npm,1:npm)
+      real s13xTYBZ(1:nx,1:npm,1:npm)
+      real v1yTYBZ(1:nx,1:npm,1:npm)
+      real v2yTYBZ(1:nx,1:npm,1:npm)
+      real v3yTYBZ(1:nx,1:npm,1:npm)
+      real s11yTYBZ(1:nx,1:npm,1:npm)
+      real s22yTYBZ(1:nx,1:npm,1:npm)
+      real s33yTYBZ(1:nx,1:npm,1:npm)
+      real s12yTYBZ(1:nx,1:npm,1:npm)
+      real s23yTYBZ(1:nx,1:npm,1:npm)
+      real v1zTYBZ(1:nx,1:npm,1:npm)
+      real v2zTYBZ(1:nx,1:npm,1:npm)
+      real v3zTYBZ(1:nx,1:npm,1:npm)
+      real s11zTYBZ(1:nx,1:npm,1:npm)
+      real s22zTYBZ(1:nx,1:npm,1:npm)
+      real s33zTYBZ(1:nx,1:npm,1:npm)
+      real s13zTYBZ(1:nx,1:npm,1:npm)
+      real s23zTYBZ(1:nx,1:npm,1:npm)
+      common/BlTYBZ/v1TYBZ,v2TYBZ,v3TYBZ,s11TYBZ,s22TYBZ,s33TYBZ,s12TYBZ,s13TYBZ,     &
+      s23TYBZ,rhoTYBZ,lamTYBZ,muTYBZ
+      common/BlxTYBZ/v1xTYBZ,v2xTYBZ,v3xTYBZ,s11xTYBZ,s22xTYBZ,s33xTYBZ, &
+      s12xTYBZ,s13xTYBZ
+      common/BlyTYBZ/v1yTYBZ,v2yTYBZ,v3yTYBZ,s11yTYBZ,s22yTYBZ,s33yTYBZ,s12yTYBZ,  &
+      s23yTYBZ
+      common/BlzTYBZ/v1zTYBZ,v2zTYBZ,v3zTYBZ,s11zTYBZ,s22zTYBZ,s33zTYBZ,s13zTYBZ, &
+      s23zTYBZ
+
+      real v1BYTZ(1:nx,1:npm,1:npm)
+      real v2BYTZ(1:nx,1:npm,1:npm)
+      real v3BYTZ(1:nx,1:npm,1:npm)
+      real s11BYTZ(1:nx,1:npm,1:npm)
+      real s22BYTZ(1:nx,1:npm,1:npm)
+      real s33BYTZ(1:nx,1:npm,1:npm)
+      real s12BYTZ(1:nx,1:npm,1:npm)
+      real s13BYTZ(1:nx,1:npm,1:npm)
+      real s23BYTZ(1:nx,1:npm,1:npm)
+      real lamBYTZ(1:nx,1:npm,1:npm)
+      real muBYTZ(1:nx,1:npm,1:npm)
+      real rhoBYTZ(1:nx,1:npm,1:npm)
+      real v1xBYTZ(1:nx,1:npm,1:npm)
+      real v2xBYTZ(1:nx,1:npm,1:npm)
+      real v3xBYTZ(1:nx,1:npm,1:npm)
+      real s11xBYTZ(1:nx,1:npm,1:npm)
+      real s22xBYTZ(1:nx,1:npm,1:npm)
+      real s33xBYTZ(1:nx,1:npm,1:npm)
+      real s12xBYTZ(1:nx,1:npm,1:npm)
+      real s13xBYTZ(1:nx,1:npm,1:npm)
+      real v1yBYTZ(1:nx,1:npm,1:npm)
+      real v2yBYTZ(1:nx,1:npm,1:npm)
+      real v3yBYTZ(1:nx,1:npm,1:npm)
+      real s11yBYTZ(1:nx,1:npm,1:npm)
+      real s22yBYTZ(1:nx,1:npm,1:npm)
+      real s33yBYTZ(1:nx,1:npm,1:npm)
+      real s12yBYTZ(1:nx,1:npm,1:npm)
+      real s23yBYTZ(1:nx,1:npm,1:npm)
+      real v1zBYTZ(1:nx,1:npm,1:npm)
+      real v2zBYTZ(1:nx,1:npm,1:npm)
+      real v3zBYTZ(1:nx,1:npm,1:npm)
+      real s11zBYTZ(1:nx,1:npm,1:npm)
+      real s22zBYTZ(1:nx,1:npm,1:npm)
+      real s33zBYTZ(1:nx,1:npm,1:npm)
+      real s13zBYTZ(1:nx,1:npm,1:npm)
+      real s23zBYTZ(1:nx,1:npm,1:npm)
+      common/BlBYTZ/v1BYTZ,v2BYTZ,v3BYTZ,s11BYTZ,s22BYTZ,s33BYTZ,s12BYTZ,s13BYTZ,     &
+      s23BYTZ,rhoBYTZ,lamBYTZ,muBYTZ
+      common/BlxBYTZ/v1xBYTZ,v2xBYTZ,v3xBYTZ,s11xBYTZ,s22xBYTZ,s33xBYTZ, &
+      s12xBYTZ,s13xBYTZ
+      common/BlyBYTZ/v1yBYTZ,v2yBYTZ,v3yBYTZ,s11yBYTZ,s22yBYTZ,s33yBYTZ,s12yBYTZ,  &
+      s23yBYTZ
+      common/BlzBYTZ/v1zBYTZ,v2zBYTZ,v3zBYTZ,s11zBYTZ,s22zBYTZ,s33zBYTZ,s13zBYTZ, &
+      s23zBYTZ
+
+      real v1BYBZ(1:nx,1:npm,1:npm)
+      real v2BYBZ(1:nx,1:npm,1:npm)
+      real v3BYBZ(1:nx,1:npm,1:npm)
+      real s11BYBZ(1:nx,1:npm,1:npm)
+      real s22BYBZ(1:nx,1:npm,1:npm)
+      real s33BYBZ(1:nx,1:npm,1:npm)
+      real s12BYBZ(1:nx,1:npm,1:npm)
+      real s13BYBZ(1:nx,1:npm,1:npm)
+      real s23BYBZ(1:nx,1:npm,1:npm)
+      real lamBYBZ(1:nx,1:npm,1:npm)
+      real muBYBZ(1:nx,1:npm,1:npm)
+      real rhoBYBZ(1:nx,1:npm,1:npm)
+      real v1xBYBZ(1:nx,1:npm,1:npm)
+      real v2xBYBZ(1:nx,1:npm,1:npm)
+      real v3xBYBZ(1:nx,1:npm,1:npm)
+      real s11xBYBZ(1:nx,1:npm,1:npm)
+      real s22xBYBZ(1:nx,1:npm,1:npm)
+      real s33xBYBZ(1:nx,1:npm,1:npm)
+      real s12xBYBZ(1:nx,1:npm,1:npm)
+      real s13xBYBZ(1:nx,1:npm,1:npm)
+      real v1yBYBZ(1:nx,1:npm,1:npm)
+      real v2yBYBZ(1:nx,1:npm,1:npm)
+      real v3yBYBZ(1:nx,1:npm,1:npm)
+      real s11yBYBZ(1:nx,1:npm,1:npm)
+      real s22yBYBZ(1:nx,1:npm,1:npm)
+      real s33yBYBZ(1:nx,1:npm,1:npm)
+      real s12yBYBZ(1:nx,1:npm,1:npm)
+      real s23yBYBZ(1:nx,1:npm,1:npm)
+      real v1zBYBZ(1:nx,1:npm,1:npm)
+      real v2zBYBZ(1:nx,1:npm,1:npm)
+      real v3zBYBZ(1:nx,1:npm,1:npm)
+      real s11zBYBZ(1:nx,1:npm,1:npm)
+      real s22zBYBZ(1:nx,1:npm,1:npm)
+      real s33zBYBZ(1:nx,1:npm,1:npm)
+      real s13zBYBZ(1:nx,1:npm,1:npm)
+      real s23zBYBZ(1:nx,1:npm,1:npm)
+      common/BlBYBZ/v1BYBZ,v2BYBZ,v3BYBZ,s11BYBZ,s22BYBZ,s33BYBZ,s12BYBZ,s13BYBZ,     &
+      s23BYBZ,rhoBYBZ,lamBYBZ,muBYBZ
+      common/BlxBYBZ/v1xBYBZ,v2xBYBZ,v3xBYBZ,s11xBYBZ,s22xBYBZ,s33xBYBZ, &
+      s12xBYBZ,s13xBYBZ
+      common/BlyBYBZ/v1yBYBZ,v2yBYBZ,v3yBYBZ,s11yBYBZ,s22yBYBZ,s33yBYBZ,s12yBYBZ,  &
+      s23yBYBZ
+      common/BlzBYBZ/v1zBYBZ,v2zBYBZ,v3zBYBZ,s11zBYBZ,s22zBYBZ,s33zBYBZ,s13zBYBZ, &
+      s23zBYBZ
+
+      real v1TXTYTZ(1:npm,1:npm,1:npm)
+      real v2TXTYTZ(1:npm,1:npm,1:npm)
+      real v3TXTYTZ(1:npm,1:npm,1:npm)
+      real s11TXTYTZ(1:npm,1:npm,1:npm)
+      real s22TXTYTZ(1:npm,1:npm,1:npm)
+      real s33TXTYTZ(1:npm,1:npm,1:npm)
+      real s12TXTYTZ(1:npm,1:npm,1:npm)
+      real s13TXTYTZ(1:npm,1:npm,1:npm)
+      real s23TXTYTZ(1:npm,1:npm,1:npm)
+      real v1xTXTYTZ(1:npm,1:npm,1:npm)
+      real v2xTXTYTZ(1:npm,1:npm,1:npm)
+      real v3xTXTYTZ(1:npm,1:npm,1:npm)
+      real s11xTXTYTZ(1:npm,1:npm,1:npm)
+      real s22xTXTYTZ(1:npm,1:npm,1:npm)
+      real s33xTXTYTZ(1:npm,1:npm,1:npm)
+      real s12xTXTYTZ(1:npm,1:npm,1:npm)
+      real s13xTXTYTZ(1:npm,1:npm,1:npm)
+      real v1yTXTYTZ(1:npm,1:npm,1:npm)
+      real v2yTXTYTZ(1:npm,1:npm,1:npm)
+      real v3yTXTYTZ(1:npm,1:npm,1:npm)
+      real s11yTXTYTZ(1:npm,1:npm,1:npm)
+      real s22yTXTYTZ(1:npm,1:npm,1:npm)
+      real s33yTXTYTZ(1:npm,1:npm,1:npm)
+      real s12yTXTYTZ(1:npm,1:npm,1:npm)
+      real s23yTXTYTZ(1:npm,1:npm,1:npm)
+      real v1zTXTYTZ(1:npm,1:npm,1:npm)
+      real v2zTXTYTZ(1:npm,1:npm,1:npm)
+      real v3zTXTYTZ(1:npm,1:npm,1:npm)
+      real s11zTXTYTZ(1:npm,1:npm,1:npm)
+      real s22zTXTYTZ(1:npm,1:npm,1:npm)
+      real s33zTXTYTZ(1:npm,1:npm,1:npm)
+      real s13zTXTYTZ(1:npm,1:npm,1:npm)
+      real s23zTXTYTZ(1:npm,1:npm,1:npm)
+      real lamTXTYTZ(1:npm,1:npm,1:npm)
+      real muTXTYTZ(1:npm,1:npm,1:npm)
+      real rhoTXTYTZ(1:npm,1:npm,1:npm)
+      common/BlTXTYTZ/v1TXTYTZ,v2TXTYTZ,v3TXTYTZ,s11TXTYTZ,s22TXTYTZ,s33TXTYTZ,s12TXTYTZ,s13TXTYTZ, &
+      s23TXTYTZ,rhoTXTYTZ,lamTXTYTZ,muTXTYTZ
+      common/BlxTXTYTZ/v1xTXTYTZ,v2xTXTYTZ,v3xTXTYTZ,s11xTXTYTZ,s22xTXTYTZ,s33xTXTYTZ,s12xTXTYTZ, &
+      s13xTXTYTZ
+      common/BlyTXTYTZ/v1yTXTYTZ,v2yTXTYTZ,v3yTXTYTZ,s11yTXTYTZ,s22yTXTYTZ,s33yTXTYTZ,s12yTXTYTZ, &
+      s23yTXTYTZ
+      common/BlzTXTYTZ/v1zTXTYTZ,v2zTXTYTZ,v3zTXTYTZ,s11zTXTYTZ,s22zTXTYTZ,s33zTXTYTZ, &
+      s13zTXTYTZ,s23zTXTYTZ
+
+      real v1TXTYBZ(1:npm,1:npm,1:npm)
+      real v2TXTYBZ(1:npm,1:npm,1:npm)
+      real v3TXTYBZ(1:npm,1:npm,1:npm)
+      real s11TXTYBZ(1:npm,1:npm,1:npm)
+      real s22TXTYBZ(1:npm,1:npm,1:npm)
+      real s33TXTYBZ(1:npm,1:npm,1:npm)
+      real s12TXTYBZ(1:npm,1:npm,1:npm)
+      real s13TXTYBZ(1:npm,1:npm,1:npm)
+      real s23TXTYBZ(1:npm,1:npm,1:npm)
+      real v1xTXTYBZ(1:npm,1:npm,1:npm)
+      real v2xTXTYBZ(1:npm,1:npm,1:npm)
+      real v3xTXTYBZ(1:npm,1:npm,1:npm)
+      real s11xTXTYBZ(1:npm,1:npm,1:npm)
+      real s22xTXTYBZ(1:npm,1:npm,1:npm)
+      real s33xTXTYBZ(1:npm,1:npm,1:npm)
+      real s12xTXTYBZ(1:npm,1:npm,1:npm)
+      real s13xTXTYBZ(1:npm,1:npm,1:npm)
+      real v1yTXTYBZ(1:npm,1:npm,1:npm)
+      real v2yTXTYBZ(1:npm,1:npm,1:npm)
+      real v3yTXTYBZ(1:npm,1:npm,1:npm)
+      real s11yTXTYBZ(1:npm,1:npm,1:npm)
+      real s22yTXTYBZ(1:npm,1:npm,1:npm)
+      real s33yTXTYBZ(1:npm,1:npm,1:npm)
+      real s12yTXTYBZ(1:npm,1:npm,1:npm)
+      real s23yTXTYBZ(1:npm,1:npm,1:npm)
+      real v1zTXTYBZ(1:npm,1:npm,1:npm)
+      real v2zTXTYBZ(1:npm,1:npm,1:npm)
+      real v3zTXTYBZ(1:npm,1:npm,1:npm)
+      real s11zTXTYBZ(1:npm,1:npm,1:npm)
+      real s22zTXTYBZ(1:npm,1:npm,1:npm)
+      real s33zTXTYBZ(1:npm,1:npm,1:npm)
+      real s13zTXTYBZ(1:npm,1:npm,1:npm)
+      real s23zTXTYBZ(1:npm,1:npm,1:npm)
+      real lamTXTYBZ(1:npm,1:npm,1:npm)
+      real muTXTYBZ(1:npm,1:npm,1:npm)
+      real rhoTXTYBZ(1:npm,1:npm,1:npm)
+      common/BlTXTYBZ/v1TXTYBZ,v2TXTYBZ,v3TXTYBZ,s11TXTYBZ,s22TXTYBZ,s33TXTYBZ,s12TXTYBZ,s13TXTYBZ, &
+      s23TXTYBZ,rhoTXTYBZ,lamTXTYBZ,muTXTYBZ
+      common/BlxTXTYBZ/v1xTXTYBZ,v2xTXTYBZ,v3xTXTYBZ,s11xTXTYBZ,s22xTXTYBZ,s33xTXTYBZ,s12xTXTYBZ, &
+      s13xTXTYBZ
+      common/BlyTXTYBZ/v1yTXTYBZ,v2yTXTYBZ,v3yTXTYBZ,s11yTXTYBZ,s22yTXTYBZ,s33yTXTYBZ,s12yTXTYBZ, &
+      s23yTXTYBZ
+      common/BlzTXTYBZ/v1zTXTYBZ,v2zTXTYBZ,v3zTXTYBZ,s11zTXTYBZ,s22zTXTYBZ,s33zTXTYBZ, &
+      s13zTXTYBZ,s23zTXTYBZ
+      real v1TXBYTZ(1:npm,1:npm,1:npm)
+      real v2TXBYTZ(1:npm,1:npm,1:npm)
+      real v3TXBYTZ(1:npm,1:npm,1:npm)
+      real s11TXBYTZ(1:npm,1:npm,1:npm)
+      real s22TXBYTZ(1:npm,1:npm,1:npm)
+      real s33TXBYTZ(1:npm,1:npm,1:npm)
+      real s12TXBYTZ(1:npm,1:npm,1:npm)
+      real s13TXBYTZ(1:npm,1:npm,1:npm)
+      real s23TXBYTZ(1:npm,1:npm,1:npm)
+      real v1xTXBYTZ(1:npm,1:npm,1:npm)
+      real v2xTXBYTZ(1:npm,1:npm,1:npm)
+      real v3xTXBYTZ(1:npm,1:npm,1:npm)
+      real s11xTXBYTZ(1:npm,1:npm,1:npm)
+      real s22xTXBYTZ(1:npm,1:npm,1:npm)
+      real s33xTXBYTZ(1:npm,1:npm,1:npm)
+      real s12xTXBYTZ(1:npm,1:npm,1:npm)
+      real s13xTXBYTZ(1:npm,1:npm,1:npm)
+      real v1yTXBYTZ(1:npm,1:npm,1:npm)
+      real v2yTXBYTZ(1:npm,1:npm,1:npm)
+      real v3yTXBYTZ(1:npm,1:npm,1:npm)
+      real s11yTXBYTZ(1:npm,1:npm,1:npm)
+      real s22yTXBYTZ(1:npm,1:npm,1:npm)
+      real s33yTXBYTZ(1:npm,1:npm,1:npm)
+      real s12yTXBYTZ(1:npm,1:npm,1:npm)
+      real s23yTXBYTZ(1:npm,1:npm,1:npm)
+      real v1zTXBYTZ(1:npm,1:npm,1:npm)
+      real v2zTXBYTZ(1:npm,1:npm,1:npm)
+      real v3zTXBYTZ(1:npm,1:npm,1:npm)
+      real s11zTXBYTZ(1:npm,1:npm,1:npm)
+      real s22zTXBYTZ(1:npm,1:npm,1:npm)
+      real s33zTXBYTZ(1:npm,1:npm,1:npm)
+      real s13zTXBYTZ(1:npm,1:npm,1:npm)
+      real s23zTXBYTZ(1:npm,1:npm,1:npm)
+      real lamTXBYTZ(1:npm,1:npm,1:npm)
+      real muTXBYTZ(1:npm,1:npm,1:npm)
+      real rhoTXBYTZ(1:npm,1:npm,1:npm)
+      common/BlTXBYTZ/v1TXBYTZ,v2TXBYTZ,v3TXBYTZ,s11TXBYTZ,s22TXBYTZ,s33TXBYTZ,s12TXBYTZ,s13TXBYTZ, &
+      s23TXBYTZ,rhoTXBYTZ,lamTXBYTZ,muTXBYTZ
+      common/BlxTXBYTZ/v1xTXBYTZ,v2xTXBYTZ,v3xTXBYTZ,s11xTXBYTZ,s22xTXBYTZ,s33xTXBYTZ,s12xTXBYTZ, &
+      s13xTXBYTZ
+      common/BlyTXBYTZ/v1yTXBYTZ,v2yTXBYTZ,v3yTXBYTZ,s11yTXBYTZ,s22yTXBYTZ,s33yTXBYTZ,s12yTXBYTZ, &
+      s23yTXBYTZ
+      common/BlzTXBYTZ/v1zTXBYTZ,v2zTXBYTZ,v3zTXBYTZ,s11zTXBYTZ,s22zTXBYTZ,s33zTXBYTZ, &
+      s13zTXBYTZ,s23zTXBYTZ
+      real v1TXBYBZ(1:npm,1:npm,1:npm)
+      real v2TXBYBZ(1:npm,1:npm,1:npm)
+      real v3TXBYBZ(1:npm,1:npm,1:npm)
+      real s11TXBYBZ(1:npm,1:npm,1:npm)
+      real s22TXBYBZ(1:npm,1:npm,1:npm)
+      real s33TXBYBZ(1:npm,1:npm,1:npm)
+      real s12TXBYBZ(1:npm,1:npm,1:npm)
+      real s13TXBYBZ(1:npm,1:npm,1:npm)
+      real s23TXBYBZ(1:npm,1:npm,1:npm)
+      real v1xTXBYBZ(1:npm,1:npm,1:npm)
+      real v2xTXBYBZ(1:npm,1:npm,1:npm)
+      real v3xTXBYBZ(1:npm,1:npm,1:npm)
+      real s11xTXBYBZ(1:npm,1:npm,1:npm)
+      real s22xTXBYBZ(1:npm,1:npm,1:npm)
+      real s33xTXBYBZ(1:npm,1:npm,1:npm)
+      real s12xTXBYBZ(1:npm,1:npm,1:npm)
+      real s13xTXBYBZ(1:npm,1:npm,1:npm)
+      real v1yTXBYBZ(1:npm,1:npm,1:npm)
+      real v2yTXBYBZ(1:npm,1:npm,1:npm)
+      real v3yTXBYBZ(1:npm,1:npm,1:npm)
+      real s11yTXBYBZ(1:npm,1:npm,1:npm)
+      real s22yTXBYBZ(1:npm,1:npm,1:npm)
+      real s33yTXBYBZ(1:npm,1:npm,1:npm)
+      real s12yTXBYBZ(1:npm,1:npm,1:npm)
+      real s23yTXBYBZ(1:npm,1:npm,1:npm)
+      real v1zTXBYBZ(1:npm,1:npm,1:npm)
+      real v2zTXBYBZ(1:npm,1:npm,1:npm)
+      real v3zTXBYBZ(1:npm,1:npm,1:npm)
+      real s11zTXBYBZ(1:npm,1:npm,1:npm)
+      real s22zTXBYBZ(1:npm,1:npm,1:npm)
+      real s33zTXBYBZ(1:npm,1:npm,1:npm)
+      real s13zTXBYBZ(1:npm,1:npm,1:npm)
+      real s23zTXBYBZ(1:npm,1:npm,1:npm)
+      real lamTXBYBZ(1:npm,1:npm,1:npm)
+      real muTXBYBZ(1:npm,1:npm,1:npm)
+      real rhoTXBYBZ(1:npm,1:npm,1:npm)
+      common/BlTXBYBZ/v1TXBYBZ,v2TXBYBZ,v3TXBYBZ,s11TXBYBZ,s22TXBYBZ,s33TXBYBZ,s12TXBYBZ,s13TXBYBZ, &
+      s23TXBYBZ,rhoTXBYBZ,lamTXBYBZ,muTXBYBZ
+      common/BlxTXBYBZ/v1xTXBYBZ,v2xTXBYBZ,v3xTXBYBZ,s11xTXBYBZ,s22xTXBYBZ,s33xTXBYBZ,s12xTXBYBZ, &
+      s13xTXBYBZ
+      common/BlyTXBYBZ/v1yTXBYBZ,v2yTXBYBZ,v3yTXBYBZ,s11yTXBYBZ,s22yTXBYBZ,s33yTXBYBZ,s12yTXBYBZ, &
+      s23yTXBYBZ
+      common/BlzTXBYBZ/v1zTXBYBZ,v2zTXBYBZ,v3zTXBYBZ,s11zTXBYBZ,s22zTXBYBZ,s33zTXBYBZ, &
+      s13zTXBYBZ,s23zTXBYBZ
+      real v1BXTYTZ(1:npm,1:npm,1:npm)
+      real v2BXTYTZ(1:npm,1:npm,1:npm)
+      real v3BXTYTZ(1:npm,1:npm,1:npm)
+      real s11BXTYTZ(1:npm,1:npm,1:npm)
+      real s22BXTYTZ(1:npm,1:npm,1:npm)
+      real s33BXTYTZ(1:npm,1:npm,1:npm)
+      real s12BXTYTZ(1:npm,1:npm,1:npm)
+      real s13BXTYTZ(1:npm,1:npm,1:npm)
+      real s23BXTYTZ(1:npm,1:npm,1:npm)
+      real v1xBXTYTZ(1:npm,1:npm,1:npm)
+      real v2xBXTYTZ(1:npm,1:npm,1:npm)
+      real v3xBXTYTZ(1:npm,1:npm,1:npm)
+      real s11xBXTYTZ(1:npm,1:npm,1:npm)
+      real s22xBXTYTZ(1:npm,1:npm,1:npm)
+      real s33xBXTYTZ(1:npm,1:npm,1:npm)
+      real s12xBXTYTZ(1:npm,1:npm,1:npm)
+      real s13xBXTYTZ(1:npm,1:npm,1:npm)
+      real v1yBXTYTZ(1:npm,1:npm,1:npm)
+      real v2yBXTYTZ(1:npm,1:npm,1:npm)
+      real v3yBXTYTZ(1:npm,1:npm,1:npm)
+      real s11yBXTYTZ(1:npm,1:npm,1:npm)
+      real s22yBXTYTZ(1:npm,1:npm,1:npm)
+      real s33yBXTYTZ(1:npm,1:npm,1:npm)
+      real s12yBXTYTZ(1:npm,1:npm,1:npm)
+      real s23yBXTYTZ(1:npm,1:npm,1:npm)
+      real v1zBXTYTZ(1:npm,1:npm,1:npm)
+      real v2zBXTYTZ(1:npm,1:npm,1:npm)
+      real v3zBXTYTZ(1:npm,1:npm,1:npm)
+      real s11zBXTYTZ(1:npm,1:npm,1:npm)
+      real s22zBXTYTZ(1:npm,1:npm,1:npm)
+      real s33zBXTYTZ(1:npm,1:npm,1:npm)
+      real s13zBXTYTZ(1:npm,1:npm,1:npm)
+      real s23zBXTYTZ(1:npm,1:npm,1:npm)
+      real lamBXTYTZ(1:npm,1:npm,1:npm)
+      real muBXTYTZ(1:npm,1:npm,1:npm)
+      real rhoBXTYTZ(1:npm,1:npm,1:npm)
+      common/BlBXTYTZ/v1BXTYTZ,v2BXTYTZ,v3BXTYTZ,s11BXTYTZ,s22BXTYTZ,s33BXTYTZ,s12BXTYTZ,s13BXTYTZ, &
+      s23BXTYTZ,rhoBXTYTZ,lamBXTYTZ,muBXTYTZ
+      common/BlxBXTYTZ/v1xBXTYTZ,v2xBXTYTZ,v3xBXTYTZ,s11xBXTYTZ,s22xBXTYTZ,s33xBXTYTZ,s12xBXTYTZ, &
+      s13xBXTYTZ
+      common/BlyBXTYTZ/v1yBXTYTZ,v2yBXTYTZ,v3yBXTYTZ,s11yBXTYTZ,s22yBXTYTZ,s33yBXTYTZ,s12yBXTYTZ, &
+      s23yBXTYTZ
+      common/BlzBXTYTZ/v1zBXTYTZ,v2zBXTYTZ,v3zBXTYTZ,s11zBXTYTZ,s22zBXTYTZ,s33zBXTYTZ, &
+      s13zBXTYTZ,s23zBXTYTZ
+      real v1BXTYBZ(1:npm,1:npm,1:npm)
+      real v2BXTYBZ(1:npm,1:npm,1:npm)
+      real v3BXTYBZ(1:npm,1:npm,1:npm)
+      real s11BXTYBZ(1:npm,1:npm,1:npm)
+      real s22BXTYBZ(1:npm,1:npm,1:npm)
+      real s33BXTYBZ(1:npm,1:npm,1:npm)
+      real s12BXTYBZ(1:npm,1:npm,1:npm)
+      real s13BXTYBZ(1:npm,1:npm,1:npm)
+      real s23BXTYBZ(1:npm,1:npm,1:npm)
+      real v1xBXTYBZ(1:npm,1:npm,1:npm)
+      real v2xBXTYBZ(1:npm,1:npm,1:npm)
+      real v3xBXTYBZ(1:npm,1:npm,1:npm)
+      real s11xBXTYBZ(1:npm,1:npm,1:npm)
+      real s22xBXTYBZ(1:npm,1:npm,1:npm)
+      real s33xBXTYBZ(1:npm,1:npm,1:npm)
+      real s12xBXTYBZ(1:npm,1:npm,1:npm)
+      real s13xBXTYBZ(1:npm,1:npm,1:npm)
+      real v1yBXTYBZ(1:npm,1:npm,1:npm)
+      real v2yBXTYBZ(1:npm,1:npm,1:npm)
+      real v3yBXTYBZ(1:npm,1:npm,1:npm)
+      real s11yBXTYBZ(1:npm,1:npm,1:npm)
+      real s22yBXTYBZ(1:npm,1:npm,1:npm)
+      real s33yBXTYBZ(1:npm,1:npm,1:npm)
+      real s12yBXTYBZ(1:npm,1:npm,1:npm)
+      real s23yBXTYBZ(1:npm,1:npm,1:npm)
+      real v1zBXTYBZ(1:npm,1:npm,1:npm)
+      real v2zBXTYBZ(1:npm,1:npm,1:npm)
+      real v3zBXTYBZ(1:npm,1:npm,1:npm)
+      real s11zBXTYBZ(1:npm,1:npm,1:npm)
+      real s22zBXTYBZ(1:npm,1:npm,1:npm)
+      real s33zBXTYBZ(1:npm,1:npm,1:npm)
+      real s13zBXTYBZ(1:npm,1:npm,1:npm)
+      real s23zBXTYBZ(1:npm,1:npm,1:npm)
+      real lamBXTYBZ(1:npm,1:npm,1:npm)
+      real muBXTYBZ(1:npm,1:npm,1:npm)
+      real rhoBXTYBZ(1:npm,1:npm,1:npm)
+      common/BlBXTYBZ/v1BXTYBZ,v2BXTYBZ,v3BXTYBZ,s11BXTYBZ,s22BXTYBZ,s33BXTYBZ,s12BXTYBZ,s13BXTYBZ, &
+      s23BXTYBZ,rhoBXTYBZ,lamBXTYBZ,muBXTYBZ
+      common/BlxBXTYBZ/v1xBXTYBZ,v2xBXTYBZ,v3xBXTYBZ,s11xBXTYBZ,s22xBXTYBZ,s33xBXTYBZ,s12xBXTYBZ, &
+      s13xBXTYBZ
+      common/BlyBXTYBZ/v1yBXTYBZ,v2yBXTYBZ,v3yBXTYBZ,s11yBXTYBZ,s22yBXTYBZ,s33yBXTYBZ,s12yBXTYBZ, &
+      s23yBXTYBZ
+      common/BlzBXTYBZ/v1zBXTYBZ,v2zBXTYBZ,v3zBXTYBZ,s11zBXTYBZ,s22zBXTYBZ,s33zBXTYBZ, &
+      s13zBXTYBZ,s23zBXTYBZ
+      real v1BXBYTZ(1:npm,1:npm,1:npm)
+      real v2BXBYTZ(1:npm,1:npm,1:npm)
+      real v3BXBYTZ(1:npm,1:npm,1:npm)
+      real s11BXBYTZ(1:npm,1:npm,1:npm)
+      real s22BXBYTZ(1:npm,1:npm,1:npm)
+      real s33BXBYTZ(1:npm,1:npm,1:npm)
+      real s12BXBYTZ(1:npm,1:npm,1:npm)
+      real s13BXBYTZ(1:npm,1:npm,1:npm)
+      real s23BXBYTZ(1:npm,1:npm,1:npm)
+      real v1xBXBYTZ(1:npm,1:npm,1:npm)
+      real v2xBXBYTZ(1:npm,1:npm,1:npm)
+      real v3xBXBYTZ(1:npm,1:npm,1:npm)
+      real s11xBXBYTZ(1:npm,1:npm,1:npm)
+      real s22xBXBYTZ(1:npm,1:npm,1:npm)
+      real s33xBXBYTZ(1:npm,1:npm,1:npm)
+      real s12xBXBYTZ(1:npm,1:npm,1:npm)
+      real s13xBXBYTZ(1:npm,1:npm,1:npm)
+      real v1yBXBYTZ(1:npm,1:npm,1:npm)
+      real v2yBXBYTZ(1:npm,1:npm,1:npm)
+      real v3yBXBYTZ(1:npm,1:npm,1:npm)
+      real s11yBXBYTZ(1:npm,1:npm,1:npm)
+      real s22yBXBYTZ(1:npm,1:npm,1:npm)
+      real s33yBXBYTZ(1:npm,1:npm,1:npm)
+      real s12yBXBYTZ(1:npm,1:npm,1:npm)
+      real s23yBXBYTZ(1:npm,1:npm,1:npm)
+      real v1zBXBYTZ(1:npm,1:npm,1:npm)
+      real v2zBXBYTZ(1:npm,1:npm,1:npm)
+      real v3zBXBYTZ(1:npm,1:npm,1:npm)
+      real s11zBXBYTZ(1:npm,1:npm,1:npm)
+      real s22zBXBYTZ(1:npm,1:npm,1:npm)
+      real s33zBXBYTZ(1:npm,1:npm,1:npm)
+      real s13zBXBYTZ(1:npm,1:npm,1:npm)
+      real s23zBXBYTZ(1:npm,1:npm,1:npm)
+      real lamBXBYTZ(1:npm,1:npm,1:npm)
+      real muBXBYTZ(1:npm,1:npm,1:npm)
+      real rhoBXBYTZ(1:npm,1:npm,1:npm)
+      common/BlBXBYTZ/v1BXBYTZ,v2BXBYTZ,v3BXBYTZ,s11BXBYTZ,s22BXBYTZ,s33BXBYTZ,s12BXBYTZ,s13BXBYTZ, &
+      s23BXBYTZ,rhoBXBYTZ,lamBXBYTZ,muBXBYTZ
+      common/BlxBXBYTZ/v1xBXBYTZ,v2xBXBYTZ,v3xBXBYTZ,s11xBXBYTZ,s22xBXBYTZ,s33xBXBYTZ,s12xBXBYTZ, &
+      s13xBXBYTZ
+      common/BlyBXBYTZ/v1yBXBYTZ,v2yBXBYTZ,v3yBXBYTZ,s11yBXBYTZ,s22yBXBYTZ,s33yBXBYTZ,s12yBXBYTZ, &
+      s23yBXBYTZ
+      common/BlzBXBYTZ/v1zBXBYTZ,v2zBXBYTZ,v3zBXBYTZ,s11zBXBYTZ,s22zBXBYTZ,s33zBXBYTZ, &
+      s13zBXBYTZ,s23zBXBYTZ
+      real v1BXBYBZ(1:npm,1:npm,1:npm)
+      real v2BXBYBZ(1:npm,1:npm,1:npm)
+      real v3BXBYBZ(1:npm,1:npm,1:npm)
+      real s11BXBYBZ(1:npm,1:npm,1:npm)
+      real s22BXBYBZ(1:npm,1:npm,1:npm)
+      real s33BXBYBZ(1:npm,1:npm,1:npm)
+      real s12BXBYBZ(1:npm,1:npm,1:npm)
+      real s13BXBYBZ(1:npm,1:npm,1:npm)
+      real s23BXBYBZ(1:npm,1:npm,1:npm)
+      real v1xBXBYBZ(1:npm,1:npm,1:npm)
+      real v2xBXBYBZ(1:npm,1:npm,1:npm)
+      real v3xBXBYBZ(1:npm,1:npm,1:npm)
+      real s11xBXBYBZ(1:npm,1:npm,1:npm)
+      real s22xBXBYBZ(1:npm,1:npm,1:npm)
+      real s33xBXBYBZ(1:npm,1:npm,1:npm)
+      real s12xBXBYBZ(1:npm,1:npm,1:npm)
+      real s13xBXBYBZ(1:npm,1:npm,1:npm)
+      real v1yBXBYBZ(1:npm,1:npm,1:npm)
+      real v2yBXBYBZ(1:npm,1:npm,1:npm)
+      real v3yBXBYBZ(1:npm,1:npm,1:npm)
+      real s11yBXBYBZ(1:npm,1:npm,1:npm)
+      real s22yBXBYBZ(1:npm,1:npm,1:npm)
+      real s33yBXBYBZ(1:npm,1:npm,1:npm)
+      real s12yBXBYBZ(1:npm,1:npm,1:npm)
+      real s23yBXBYBZ(1:npm,1:npm,1:npm)
+      real v1zBXBYBZ(1:npm,1:npm,1:npm)
+      real v2zBXBYBZ(1:npm,1:npm,1:npm)
+      real v3zBXBYBZ(1:npm,1:npm,1:npm)
+      real s11zBXBYBZ(1:npm,1:npm,1:npm)
+      real s22zBXBYBZ(1:npm,1:npm,1:npm)
+      real s33zBXBYBZ(1:npm,1:npm,1:npm)
+      real s13zBXBYBZ(1:npm,1:npm,1:npm)
+      real s23zBXBYBZ(1:npm,1:npm,1:npm)
+      real lamBXBYBZ(1:npm,1:npm,1:npm)
+      real muBXBYBZ(1:npm,1:npm,1:npm)
+      real rhoBXBYBZ(1:npm,1:npm,1:npm)
+      common/BlBXBYBZ/v1BXBYBZ,v2BXBYBZ,v3BXBYBZ,s11BXBYBZ,s22BXBYBZ,s33BXBYBZ,s12BXBYBZ,s13BXBYBZ, &
+      s23BXBYBZ,rhoBXBYBZ,lamBXBYBZ,muBXBYBZ
+      common/BlxBXBYBZ/v1xBXBYBZ,v2xBXBYBZ,v3xBXBYBZ,s11xBXBYBZ,s22xBXBYBZ,s33xBXBYBZ,s12xBXBYBZ, &
+      s13xBXBYBZ
+      common/BlyBXBYBZ/v1yBXBYBZ,v2yBXBYBZ,v3yBXBYBZ,s11yBXBYBZ,s22yBXBYBZ,s33yBXBYBZ,s12yBXBYBZ, &
+      s23yBXBYBZ
+      common/BlzBXBYBZ/v1zBXBYBZ,v2zBXBYBZ,v3zBXBYBZ,s11zBXBYBZ,s22zBXBYBZ,s33zBXBYBZ, &
+      s13zBXBYBZ,s23zBXBYBZ

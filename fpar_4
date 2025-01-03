@@ -1,0 +1,25 @@
+***sampling and iterations:
+5.0e1  dx         #!! millimetres
+1.0e-3 dt         #!! millisectonds
+1800   ntime
+***fault parameters:*******
+3.0e-2 tw         #!!
+0.665 vforce 0.665
+260.e5   peak
+70.e5  270.e5 255.e5  (stremin stremax struncate)
+0.03  .3  delta
+.0000    vmax
+1.0e-4  dissipation  #!!
+0.0   mu_s
+0.0   mu_d
+weak  FricType
+.01   tau2
+5e3     InitRadius
+***source pos*************************
+27.5e2 5.0e1        #!!
+***receiver pos: x, depth(y) , z *************************
+50.0e1 0.0e2 80.0e1         #!!
+100.0e1 0.0e2 80.0e1         #!!
+150.0e1 0.0e2 80.5e1         #!!
+200.0e1 0.0e2 80.0e1         #!!
+250.0e1 0.0e2 80.0e1         #!!
