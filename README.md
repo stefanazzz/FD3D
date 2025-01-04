@@ -1,9 +1,9 @@
 finite differences 3d code
 ==========================
-- triffy.f90 main code and subroutines
-- declarations of variables is in triffy.dec
-- parameters.f size of grid (do not alter the -2+npm+6 as this is needed for PML boundaries)
-- fpar parameters of simulations that are read on the run
+- triffy.f90: main code and subroutines
+- triffy.dec: declarations of variables
+- parameters.f: size of grid (do not alter the -2+npm+6 as this is needed for PML boundaries)
+- fpar: parameters of simulations that are read on the run
 - dx/dt should be proportional to maximum wave velocity in medium to allow for stability of the code. A value dx/dt > 5 vmax is advised, however code may still run without instability in some cases with sqrt(3) > dx/dt 
 - dx should be sufficiently small to sample the minimum wavelength correctly, avoiding numerical dispersion.
 Usually the surface or Rayleigh wave is the most numerically dispersive, being the slowest and most localised wave most times.  
