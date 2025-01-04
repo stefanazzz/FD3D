@@ -5,7 +5,7 @@ finite differences 3d code
 - parameters.f: size of grid (do not alter the -2+npm+6 as this is needed for PML boundaries)
 - fpar: parameters of simulations that are read on the run
 - dx/dt should be proportional to maximum wave velocity in medium to allow for stability of the code. A value dx/dt > 5 vmax is advised, however code may still run without instability in some cases with sqrt(3) > dx/dt 
-- dx should be sufficiently small to sample the minimum wavelength correctly, avoiding numerical dispersion.
+- dx should be sufficiently small to sample the minimum wavelength correctly, to reduce numerical dispersion.
 Usually the surface or Rayleigh wave is the most numerically dispersive, being the slowest and most localised wave most times.  
 - medium velocity for P and S wave is sqrt((mu + 2 lambda)/rho))
 and sqrt(mu/rho), respectively. mu is shear modulus, lambda is lame modulus, and rho is mass density. 
