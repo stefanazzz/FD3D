@@ -25,6 +25,7 @@
        real s23(1:nx,1:ny,1:nz)
        real s13(1:nx,1:ny,1:nz)
        real mu(1:nx,1:ny,1:nz)
+       real muh(1:nx,1:ny,1:nz)
        real lam(1:nx,1:ny,1:nz)
        real rho(1:nx,1:ny,1:nz)
        real qf(1:nx,1:ny,1:nz)
@@ -53,7 +54,7 @@
        common /ra2/ s11,s22,s33,s12,s23,s13,friction,rstre, &
         peak_tf,slip_mem1,slip_mem2,slip,theta,rdis1, &
         rdis2,rdis,dirac,strini13,strini23
-       common /ra3/ mu,lam,qf,rho
+       common /ra3/ mu,muh,lam,qf,rho
        common /intvec/ broken,incrack,nxr,nyr,nzr
        common /integer/ &
         it,nos1,nos2,is1,is2,nbr,nxf1,nxf2,nyf1,nyf2,nzf,j0,&

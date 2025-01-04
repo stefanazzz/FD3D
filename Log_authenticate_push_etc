@@ -1,0 +1,149 @@
+    1  export PATH = $PATH:/nobackup/lcbt87/anaconda3/bin
+    2  path
+    3  $path
+    4  $PATH
+    5  exit
+    6  conda activate hinet_env
+    7  spyder
+    8  spyder
+    9  conda deactivate
+   10  for i in fpar*; do echo $i; cat $i; done
+   11  ls
+   12  cd ..
+   13  ls
+   14  tar -xvzf f2d.tgz 
+   15  rm f2d.tgz 
+   16  cd Fault2dPML
+   17  ls
+   18  mv Makefile Makefile_old
+   19  cp ../BigSmall/Makefile .
+   20  cat Makefile_old 
+   21  vi Makefile
+   22  make
+   23  vi Makefile
+   24  make
+   25  vi Makefile
+   26  make
+   27  vi fault2dPML.f:
+   28  vi fault2dPML.f
+   29  vi fault2dPML.f
+   30  ls
+   31  rm *.o
+   32  make
+   33  mkdir RES
+   34  more fpar
+   35  fault.x
+   36  bg
+   37  ls RES
+   38  ls RES
+   39  ls
+   40  more iter
+   41  more fpar
+   42  more iter
+   43  cd RES
+   44  l
+   45  ls
+   46  cat fvex02600
+   47  cd ..
+   48  ls
+   49  vi read_plot.py
+   50  spyder 
+   51  bg
+   52  more read_plot.py 
+   53  cd RES
+   54  vi fvex01500
+   55  ls
+   56  cd ..
+   57  ls
+   58  rm *nb
+   59  ls
+   60  rm *eps
+   61  ls
+   62  rm *.o
+   63  ls
+   64  ls -l
+   65  rm NewNumericalResultsM6.nb.pdf NewNumericalResultsM6.pdf print.pdf clip.bmp
+   66  ls -l
+   67  rm Makefile_old
+   68  more PhotoAcoustic/
+   69  cd PhotoAcoustic/
+   70  ls
+   71  ls -l
+   72  cd ..
+   73  \rm -r PhotoAcoustic
+   74  ls
+   75  cp fault2dPML.f fault2dPML_0.f
+   76  vi fault2dPML.f 
+   77  fg
+   78  cp fpar fpar_0
+   79  vi fpar
+   80  fg
+   81  vi fault2dPML.f 
+   82  more fpar_0
+   83  vi fault2dPML.f 
+   84  more fpar_0
+   85  vi fpar
+   86  make
+   87  fault.x
+   88  bg
+   89  more iter
+   90  more iter
+   91  more iter
+   92  fg
+   93  vi fpar
+   94  fault.x
+   95  bg
+   96  more iter
+   97  ls RES
+   98  vi fpar
+   99  ls -l
+  100  cd RES
+  101  ls -l
+  102  cd ..
+  103  vi fault2dPML.f 
+  104  cd
+  105  cd Downloads/
+  106  exit
+  107  eval `ssh-agent -s`
+  108  ssh-add ~/.ssh/id_ed25519
+  109  history
+  110  exit
+  111  ssh-add
+  112  git push origin main
+  113  git push origin main
+  114  git config --global user.name "stefanazzz"
+  115  git config --global user.email "stefan.zzz@gmail.com"
+  116  git config -l
+  117  git push origin main
+  118  git push origin main
+  119  git status
+  120  rm fig.tgz 
+  121  git status
+  122  history
+  123  git commit 
+  124  git status
+  125  git add output_all.gif 
+  126  git status
+  127  git commit 
+  128  git push 
+  129  git commit output_all.gif 
+  130  mv output_all.gif Figures/.
+  131  git status
+  132  git commit
+  133  git committ
+  134  git commit
+  135  git push
+  136  git push
+  137  git commit
+  138  git add Figures/output_all.gif 
+  139  git commit
+  140  git push 
+  141  about
+  142  uname
+  143  unnam -a
+  144  uname -a
+  145  lscpu
+  146  uname -a
+  147  bc -l
+  148  pwd
+  149  history > Log_authenticate_push_etc

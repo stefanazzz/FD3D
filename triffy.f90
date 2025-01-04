@@ -31,7 +31,7 @@ do while(it.le.ntime)  !start time iteration
  call freesurfacesym
  call save                  !visualize and/or store variables 
  call extrapolate           !extrapolate in time
- call corner_abs
+!call corner_abs
  call drive_PML_velo
 end do                      !end of time iteration
 close (12)
@@ -75,13 +75,29 @@ end
         do i=1,nx
          dista = sqrt((float(i)-nxh)**2+ (float(j)-nyh)**2+ (float(k)-nzh)**2)
          if (dista .le. inrad) then
-          mu(i,j,k)  = 1.0
-          lam(i,j,k) = 1.0
-          rho(i,j,k) = rhoAll
+          mu(i,j,k)  = 0.0
+          lam(i,j,k) = 0.0
+          rho(i,j,k) = 1.0  ! caution: rho not allowed to be zero! take small value instead
          endif
         enddo
        enddo
       enddo
+! compute muh : the harmonic mean of mu to match staggered grid.
+! If any value is zero then use standard mean instead.
+! 
+      do k=1,nz
+       do j=1,ny
+        do i=1,nx
+         if (mu(i,j,k) .eq. 0. .or. mu(i+1,j,k) .eq. 0.  &
+             .or. mu(i+1,j-1,k) .eq. 0. .or. mu(i,j-1,k) .eq. 0.) then
+          muh(i,j,k) = (mu(i,j,k)+mu(i+1,j,k)+mu(i+1,j-1,k)+mu(i,j-1,k))/4.
+         else
+          muh(i,j,k)=(4./(1./mu(i,j,k)+ 1./mu(i+1,j,k)+1./mu(i+1,j-1,k)+ 1./mu(i,j-1,k)))
+         endif
+        enddo
+       enddo
+      enddo
+
 ! Fault parameters- NO INPUT FILE:
       nzf=nz/2 ! this also serves as mid-plane for 2D/3d
       nxf1=4 
@@ -192,8 +208,7 @@ end
          rn*(v2(i,j+1,k)-v2(i,j,k))+rnn*(v2(i,j+2,k)-v2(i,j-1,k))))
 
         s12(i,j,k)=  s12(i,j,k) + &
-         (4./(1/mu(i,j,k)+ 1/mu(i+1,j,k)+ &
-         1/mu(i+1,j-1,k)+ 1/mu(i,j-1,k)))*(dt/dx)*( &
+         muh(i,j,k)*(dt/dx)*( &
          rn*(v1(i,j,k)-v1(i,j-1,k))+rnn*(v1(i,j+1,k)-v1(i,j-2,k))+ &
          rn*(v2(i+1,j,k)-v2(i,j,k))+rnn*(v2(i+2,j,k)-v2(i-1,j,k)))
 
@@ -299,7 +314,7 @@ end
       do j=3,ny-2
       do i=3,nx-2
       v1(i,j,k)= v1(i,j,k)+ &
-      (dt/(dx*2./((1/rho(i,j,k)+1/rho(i+1,j,k)))))*( &
+      (dt/(dx*2./((1/rho(i,j,k)+1/rho(i+1,j,k)))))*( & 
       rn*(s11(i+1,j,k)-s11(i,j,k))+rnn*(s11(i+2,j,k)-s11(i-1,j,k))+ &
       rn*(s12(i,j+1,k)-s12(i,j,k))+rnn*(s12(i,j+2,k)-s12(i,j-1,k))+ &
       rn*(s13(i,j,k)-s13(i,j,k-1))+rnn*(s13(i,j,k+1)-s13(i,j,k-2)))
@@ -313,8 +328,6 @@ end
       rn*(s33(i,j,k+1)-s33(i,j,k))+rnn*(s33(i,j,k+2)-s33(i,j,k-1))+ &
       rn*(s23(i,j+1,k)-s23(i,j,k))+rnn*(s23(i,j+2,k)-s23(i,j-1,k))+ &
       rn*(s13(i,j,k)-s13(i-1,j,k))+rnn*(s13(i+1,j,k)-s13(i-2,j,k)))
-      v1(i,j,k)= v1(i,j,k)*(1.-dissipation*exp(-float(i-3)/10.)*exp(-float(j-3)/10.))
-      v2(i,j,k)= v2(i,j,k)*(1.-dissipation*exp(-float(i-3)/10.)*exp(-float(j-3)/10.))
       enddo
       enddo
       enddo
@@ -325,7 +338,7 @@ end
       subroutine corner_abs
       include 'triffy.dec'
       real d1,d2,d3,d4,rlen
-      dis=dissipation/dt
+      dis=dissipation*dt
       rlen=5.
       do k=3,nz-2
       do j=3,ny-2

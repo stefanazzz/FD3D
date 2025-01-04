@@ -9,7 +9,7 @@
 70.e5  270.e5 255.e5  (stremin stremax struncate)
 0.03  .3  delta
 .0000    vmax
-1.0e-4  dissipation  #!!
+0.0e-4  dissipation  #!!
 0.0   mu_s
 0.0   mu_d
 weak  FricType
