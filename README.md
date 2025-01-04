@@ -13,8 +13,3 @@ and sqrt(mu/rho), respectively. mu is shear modulus, lambda is lame modulus, and
 - additional routines defined in other f90 files are used for PML absorbing boundaries only, and need not be modified.
 - free surface is implemented in first j (y) layers
 - absorbingg boundaries are implemented on all other sides of cuboid
-- an additional [optional] absortpion coefficient is added on edges and first j layers, this decays exponentially with distance from edge, routine "corner_abs".
-The aim is to attenuate surface waves that are not sufficiently reduced by PML.
-corner_abs is controlled by 'rlen' and 'dissipation' coefficients.
-Inadequate value of dissipation can produce float point exceptionsi and consequenct program crash. 
-Reduce dissipation in fpar proportionally to dt, or put dissipation to 0 to eliminate the corner absorption, or bypass call to corner_abs.
