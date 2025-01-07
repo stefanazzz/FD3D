@@ -1,5 +1,7 @@
 finite differences 3d code
 ==========================
+![animated wavefield plot](./Figures/output_all.gif)
+
 - triffy.f90: main code and subroutines
 - triffy.dec: declarations of variables
 - parameters.f: size of grid (do not alter the -2+npm+6 as this is needed for PML boundaries)
