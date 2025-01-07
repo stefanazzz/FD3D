@@ -3,7 +3,7 @@ finite differences 3d code
 ![animated wavefield plot](./Figures/output_all.gif)
 
 A 3D finite differences code for elastic wave propagation. Uses a staggered grid in the stress velocity formulation. 
-Includes free surface and absorbing boundaries with the Perfect Matching Layer method.
+Includes absorbing boundaries with the Perfect Matching Layer method.
 The example provided models a spherical void buried in a homogeneous half space with free surface on top.
 
 - triffy.f90: main code and subroutines
