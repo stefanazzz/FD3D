@@ -2,7 +2,7 @@ finite differences 3d code
 ==========================
 ![animated wavefield plot](./Figures/output_all.gif)
 
-A 3D finite differences code for elastic wave propagation. Uses a staggered grid in the stress velocity formulation. 
+A 3D finite differences code for elastic isotropic wave propagation. Uses a staggered grid in the stress velocity formulation. 
 Includes absorbing boundaries with the Perfect Matching Layer method.
 The example provided is a small footprint model with a reduced number of nodes. 
 The example simulates a spherical void buried in a homogeneous half space with free surface on top, energised by a vertical force at the surface.
