@@ -9,8 +9,9 @@ FC7 = f77      # f77 compiler
 OBJ  =  triffy.o StressPMLpack.o VeloPMLpack.o InitDist.o PMLMed.o drives.o drivev.o VectI.o
 
 #FFLAGS = -O3 -pfa -64 -mp
-FFLAGS = -ffpe-trap=invalid,zero,overflow -g
+#FFLAGS = -ffpe-trap=invalid,zero,overflow -g
 #FFLAGS = -g
+FFLAGS = -O3 -floop-nest-optimize
 
 ###############################
 .SUFFIXES: .f90 .dec
