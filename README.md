@@ -9,8 +9,8 @@ The example simulates a spherical void buried in a homogeneous half space with f
 
 - triffy.f90: main code and subroutines
 - triffy.dec: declarations of variables
-- parameters.f: size of grid (do not alter the -2+npm+6 as this is needed for PML boundaries)
-- fpar: parameters of simulations that are read on the run
+- parameters.f: size of grid (nx, ny, nz, nt) and additional PML layer (npm). Do not alter the -2+npm+6 and npm as this is needed for PML boundaries
+- fpar: parameters of simulation that are read on the run
 - dx and dt are space and time sampling steps, resperctively. dx/dt should be proportional to maximum wave velocity $c_{max}$ in medium to allow for stability of the code. A value $dx/dt > 5 c_{max}$ is advised, however code may still run without instability in some cases with $dx/dt > \sqrt{3} c_{max}$ for a limited number of time iterations.
 - Maximum wave velocity is the highest value of P velocity in the model. Medium velocity for P and S wave is $c_P=\sqrt{(\mu + 2 \lambda)/\rho}$ and $c_S=\sqrt{\mu/\rho}$, respectively, where $\mu$ is shear modulus, $\lambda$ is Lame parameter and $\rho$ is mass density. 
 - dx should be sufficiently small to sample the minimum wavelength correctly, to reduce numerical dispersion.
