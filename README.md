@@ -2,6 +2,10 @@ finite differences 3d code
 ==========================
 ![animated wavefield plot](./Figures/output_all.gif)
 
+A 3D finite differences code for elastic wave propagation. Uses a staggered grid in the stress velocity formulation. 
+Includes free surface and absorbing boundaries with the Perfect Matching Layer method.
+The example provided models a spherical void buried in a homogeneous half space with free surface on top.
+
 - triffy.f90: main code and subroutines
 - triffy.dec: declarations of variables
 - parameters.f: size of grid (do not alter the -2+npm+6 as this is needed for PML boundaries)
@@ -13,5 +17,5 @@ Usually the surface or Rayleigh wave is the most numerically dispersive, being t
 and sqrt(mu/rho), respectively. mu is shear modulus, lambda is lame modulus, and rho is mass density. 
 - inhomogeneous waves (e.g. Rayleigh) can be slower than S wave, depending on the specific ration of mu and lambda.
 - additional routines defined in other f90 files are used for PML absorbing boundaries only, and need not be modified.
-- free surface is implemented in first j (y) layers
-- absorbingg boundaries are implemented on all other sides of cuboid
+- free surface is implemented in first j (y) layers using the mirror method (symmetry / antisymmetry of stress and velocity).
+- PML absorbing boundaries are implemented on all other sides of cuboid
