@@ -14,9 +14,9 @@ The example simulates a spherical void buried in a homogeneous half space with f
 - dx/dt should be proportional to maximum wave velocity in medium to allow for stability of the code. A value dx/dt > 5 vmax is advised, however code may still run without instability in some cases with sqrt(3) > dx/dt 
 - dx should be sufficiently small to sample the minimum wavelength correctly, to reduce numerical dispersion.
 Usually the surface or Rayleigh wave is the most numerically dispersive, being the slowest and most localised wave most times.  
-- medium velocity for P and S wave is $\sqrt{(\mu + 2 \lambda)/\rho}$
-and $\sqrt{\mu/\rho}$, respectively. mu is shear modulus, lambda is lame modulus, and rho is mass density. 
-- Rayleigh (surface waves) are slightly slower than S wave. Their exact velocity depends on the specific Poisson ratio; in a homogeneous half-space an approximate Rayleigh wave velocity is ${\displaystyle c_{R}=c_{S}{\frac {0.862+1.14\nu }{1+\nu }}}$
+- medium velocity for P and S wave is $c_P=\sqrt{(\mu + 2 \lambda)/\rho}$
+and $c_S=\sqrt{\mu/\rho}$, respectively, where $\mu$ is shear modulus, $\lambda$ is Lame parameter and $\rho$ is mass density. 
+- Rayleigh (surface waves) are slightly slower than S wave. Their exact velocity $c_R$ depends on the specific Poisson ratio; in a homogeneous half-space an approximate Rayleigh wave velocity is ${\displaystyle c_{R}=c_{S}{\frac {0.862+1.14\nu }{1+\nu }}}$
 - additional routines defined in other f90 files are used for PML absorbing boundaries only, and need not be modified.
 - free surface is implemented in first j (y) layers using the mirror method (symmetry / antisymmetry of stress and velocity).
 - PML absorbing boundaries are implemented on all other sides of cuboid
